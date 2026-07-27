@@ -45,7 +45,7 @@ services:
         condition: service_healthy
     security_opt:
       - no-new-privileges:true
-    read_only: true
+    read_only: false
     tmpfs:
       - /tmp
 
