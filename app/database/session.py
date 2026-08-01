@@ -3,29 +3,43 @@ from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 
-from sqlalchemy.engine import make_url
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-
-from app.core.config import get_settings
-
 logger = logging.getLogger(__name__)
 
 
 class Database:
-    def __init__(self):
+    """
+    Async database manager using SQLAlchemy.
+    
+    Handles:
+    - Connection pooling
+    - Session management
+    - Connection lifecycle
+    """
+
+    def __init__(self) -> None:
+        """Initialize database with connection pool."""
+        from sqlalchemy import exc
+        from sqlalchemy.engine import make_url
+        from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+        from sqlalchemy.pool import QueuePool
+        
+        from app.core.config import get_settings
+        
         settings = get_settings()
         database_url = settings.DATABASE_URL
 
+        # Parse and validate URL
         try:
             url = make_url(database_url)
+            logger.debug("Database URL parsed: driver=%s", url.drivername)
         except Exception as exc:
             logger.warning(
-                "Failed to parse DATABASE_URL '%s': %s",
-                database_url,
+                "Failed to parse DATABASE_URL: %s",
                 exc,
             )
             url = None
 
+        # Convert PostgreSQL URL to asyncpg if needed
         if url and str(url.drivername).startswith("postgresql"):
             if url.drivername == "postgresql":
                 database_url = database_url.replace(
@@ -33,37 +47,83 @@ class Database:
                     "postgresql+asyncpg://",
                     1,
                 )
+                logger.debug("Converted URL to asyncpg driver")
 
+        # Create async engine with proper pooling
         self.engine = create_async_engine(
             database_url,
             echo=settings.DEBUG,
             pool_pre_ping=True,
+            pool_size=10,
+            max_overflow=20,
+            pool_recycle=3600,
         )
 
         self.session_factory = async_sessionmaker(
             self.engine,
-            expire_on_commit=False,
             class_=AsyncSession,
+            expire_on_commit=False,
         )
 
-    async def connect(self):
-        async with self.engine.begin() as conn:
-            await conn.run_sync(lambda _: None)
+        logger.info("Database engine initialized")
 
-        logger.info("Database connected.")
+    async def connect(self) -> None:
+        """
+        Test database connection.
+        
+        Raises:
+            Exception: If connection fails
+        """
+        try:
+            async with self.engine.begin() as conn:
+                # Execute simple query to test connection
+                await conn.exec_driver_sql("SELECT 1")
+            
+            logger.info("Database connected successfully")
+        except Exception as exc:
+            logger.exception("Failed to connect to database: %s", exc)
+            raise
 
     @asynccontextmanager
     async def session(self):
-        session = self.session_factory()
-
+        """
+        Context manager for database sessions.
+        
+        Usage:
+            async with database.session() as session:
+                # Use session
+                pass
+        
+        Yields:
+            AsyncSession object
+        """
+        async_session = self.session_factory()
         try:
-            yield session
+            yield async_session
+        except Exception as exc:
+            await async_session.rollback()
+            logger.exception("Session error: %s", exc)
+            raise
         finally:
-            await session.close()
+            await async_session.close()
 
     async def dispose(self) -> None:
-        await self.engine.dispose()
-        logger.info("Database disconnected.")
+        """
+        Dispose of all connections in pool.
+        
+        Should be called on shutdown.
+        """
+        try:
+            await self.engine.dispose()
+            logger.info("Database connection pool disposed")
+        except Exception as exc:
+            logger.exception("Failed to dispose database: %s", exc)
 
     async def close(self) -> None:
+        """
+        Close database engine.
+        
+        Should be called during application shutdown.
+        """
         await self.dispose()
+        logger.info("Database closed")
