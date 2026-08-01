@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class Database:
     """
     Async database manager using SQLAlchemy.
-    
+
     Handles:
     - Connection pooling
     - Session management
@@ -20,11 +20,14 @@ class Database:
         """Initialize database with connection pool."""
         from sqlalchemy import exc
         from sqlalchemy.engine import make_url
-        from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-        from sqlalchemy.pool import QueuePool
-        
+        from sqlalchemy.ext.asyncio import (
+            AsyncSession,
+            async_sessionmaker,
+            create_async_engine,
+        )
+
         from app.core.config import get_settings
-        
+
         settings = get_settings()
         database_url = settings.DATABASE_URL
 
@@ -32,10 +35,10 @@ class Database:
         try:
             url = make_url(database_url)
             logger.debug("Database URL parsed: driver=%s", url.drivername)
-        except Exception as exc:
+        except Exception as err:
             logger.warning(
                 "Failed to parse DATABASE_URL: %s",
-                exc,
+                err,
             )
             url = None
 
@@ -70,7 +73,7 @@ class Database:
     async def connect(self) -> None:
         """
         Test database connection.
-        
+
         Raises:
             Exception: If connection fails
         """
@@ -78,7 +81,7 @@ class Database:
             async with self.engine.begin() as conn:
                 # Execute simple query to test connection
                 await conn.exec_driver_sql("SELECT 1")
-            
+
             logger.info("Database connected successfully")
         except Exception as exc:
             logger.exception("Failed to connect to database: %s", exc)
@@ -88,12 +91,12 @@ class Database:
     async def session(self):
         """
         Context manager for database sessions.
-        
+
         Usage:
             async with database.session() as session:
                 # Use session
                 pass
-        
+
         Yields:
             AsyncSession object
         """
@@ -110,7 +113,7 @@ class Database:
     async def dispose(self) -> None:
         """
         Dispose of all connections in pool.
-        
+
         Should be called on shutdown.
         """
         try:
@@ -122,7 +125,7 @@ class Database:
     async def close(self) -> None:
         """
         Close database engine.
-        
+
         Should be called during application shutdown.
         """
         await self.dispose()
