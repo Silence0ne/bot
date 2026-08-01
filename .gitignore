@@ -20,6 +20,7 @@ __pycache__/
 .mypy_cache/
 
 # Packaging artifacts
+quran_bot.egg-info
 *.egg-info/
 
 # OS

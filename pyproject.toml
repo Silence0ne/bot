@@ -3,52 +3,104 @@ requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-
-name = "quran-bot"
-
+name = "natiq-bot"
 version = "0.1.0"
-
-description = "Telegram Quran Bot"
-
+description = "Telegram Quran Bot with Daily Ayah Scheduling"
 requires-python = ">=3.12"
+authors = [{name = "Bruxo", email = "braxbot+github@protonmail.com"}]
+
+readme = "README.md"
+license = {text = "MIT"}
+keywords = ["telegram", "bot", "quran", "natiq", "islamic"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: Telegram",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Communications :: Chat",
+]
 
 dependencies = [
-
+    # Telegram
     "python-telegram-bot[job-queue]>=22.2",
-
+    
+    # Database
     "SQLAlchemy>=2.0",
-
-    "asyncpg",
-    "psycopg2-binary",
-
-    "alembic",
-
-    "redis[hiredis]",
-
-    "httpx",
-
-    "pydantic>=2",
-
-    "pydantic-settings",
-
+    "asyncpg>=0.28",
+    "psycopg2-binary>=2.9",
+    "alembic>=1.12",
+    
+    # Cache
+    "redis[hiredis]>=5.0",
+    
+    # HTTP
+    "httpx>=0.24",
+    
+    # Config
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+    
+    # Logging
+    "python-json-logger>=2.0",
 ]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21",
+    "black>=23.0",
+    "ruff>=0.1",
+    "mypy>=1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/ibruxo/natiq_bot"
+Documentation = "https://github.com/ibruxo/natiq_bot#readme"
+Repository = "https://github.com/ibruxo/natiq_bot.git"
+Issues = "https://github.com/ibruxo/natiq_bot/issues"
 
 [tool.setuptools]
 packages = ["app"]
+include-package-data = true
 
-[tool.setuptools.package-dir]
-"" = "."
+[tool.setuptools.package-data]
+app = ["py.typed"]
 
 [tool.black]
-
 line-length = 88
 target-version = ["py312"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
 
 [tool.ruff]
-
 line-length = 88
+target-version = "py312"
+select = ["E", "F", "W"]
+ignore = ["E501"]  # Line too long (handled by black)
 
 [tool.pytest.ini_options]
-
 asyncio_mode = "auto"
-pythonpath = ["."]
+pythonpath = ["."] 
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
