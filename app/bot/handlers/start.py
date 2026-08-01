@@ -24,7 +24,7 @@ async def start(
 ) -> None:
     """
     Handle /start command.
-    
+
     - Auto-register user to database
     - Set default preferences
     - Enable daily ayah at 3:15 AM
@@ -70,9 +70,7 @@ async def start(
 
     except Exception as exc:
         logger.exception("Start handler failed: error=%s", exc)
-        await update.message.reply_text(
-            "❌ An error occurred. Please try again."
-        )
+        await update.message.reply_text("❌ An error occurred. Please try again.")
 
 
 def get_handler() -> CommandHandler:

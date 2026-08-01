@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 async def send_daily_ayah_job(context) -> None:
     """
     Send daily ayah to users at their scheduled time.
-    
+
     Runs every minute and checks if any users have a scheduled send time.
     """
     try:
@@ -42,7 +42,9 @@ async def send_daily_ayah_job(context) -> None:
             logger.debug("No users scheduled for %02d:%02d", hour, minute)
             return
 
-        logger.info("Sending daily ayah to %d users at %02d:%02d", len(users), hour, minute)
+        logger.info(
+            "Sending daily ayah to %d users at %02d:%02d", len(users), hour, minute
+        )
 
         for user in users:
             try:
@@ -101,7 +103,7 @@ async def send_daily_ayah_job(context) -> None:
 def schedule_daily_ayah(application: Application) -> None:
     """
     Schedule daily ayah job.
-    
+
     Runs every minute to check if it's time to send ayah to users.
     """
     job_queue: JobQueue = application.job_queue

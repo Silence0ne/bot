@@ -9,7 +9,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """
     Application settings loaded from environment variables.
-    
+
     Environment variables:
     - BOT_TOKEN: Telegram bot token (required)
     - DATABASE_URL: PostgreSQL connection URL
@@ -62,10 +62,10 @@ class Settings(BaseSettings):
         """Validate API timeout is positive."""
         if not isinstance(v, int):
             v = int(v)
-        
+
         if v <= 0:
             raise ValueError("NATIQ_API_TIMEOUT must be greater than zero")
-        
+
         return v
 
     @field_validator("NATIQ_PRIMARY_API", mode="before")
@@ -74,14 +74,14 @@ class Settings(BaseSettings):
         """Validate API URL is not empty."""
         if not v or not v.strip():
             raise ValueError("NATIQ_PRIMARY_API must not be empty")
-        
+
         return v.strip()
 
     @property
     def admin_user_ids(self) -> set[int]:
         """
         Parse comma-separated admin user IDs.
-        
+
         Returns:
             Set of admin user IDs
         """
@@ -107,7 +107,7 @@ class Settings(BaseSettings):
     def api_headers(self) -> dict[str, str]:
         """
         Get HTTP headers for API requests.
-        
+
         Returns:
             Dictionary with Accept and optional Authorization headers
         """
@@ -130,7 +130,7 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """
     Get cached settings instance.
-    
+
     Returns:
         Settings object
     """
@@ -140,10 +140,10 @@ def get_settings() -> Settings:
 def validate_runtime_settings() -> Settings:
     """
     Validate runtime settings at startup.
-    
+
     Returns:
         Settings object
-    
+
     Raises:
         ValueError: If BOT_TOKEN is missing
     """

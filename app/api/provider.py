@@ -14,7 +14,7 @@ from app.schemas.ayah import Ayah
 
 logger = logging.getLogger(__name__)
 
-TAKHTIT_UUID = "9419b5bd-8827-4a59-8dbc-935a472ca2f7"
+TAKHTIT_UUID = "36ec80c5-ef5f-4a83-808f-4b936b4a1d87"
 
 
 class NatiqProvider:

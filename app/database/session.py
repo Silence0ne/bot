@@ -18,7 +18,6 @@ class Database:
 
     def __init__(self) -> None:
         """Initialize database with connection pool."""
-        from sqlalchemy import exc
         from sqlalchemy.engine import make_url
         from sqlalchemy.ext.asyncio import (
             AsyncSession,

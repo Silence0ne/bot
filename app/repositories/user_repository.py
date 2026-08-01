@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 from datetime import date
-from typing import Optional
 
 from sqlalchemy import select
 
@@ -15,7 +14,7 @@ logger = logging.getLogger(__name__)
 class UserRepository:
     """
     Complete user repository with all CRUD operations and daily ayah support.
-    
+
     Handles:
     - User creation and retrieval
     - Daily ayah scheduling and sending
@@ -313,7 +312,7 @@ class UserRepository:
             async with self._database.session() as session:
                 result = await session.execute(
                     select(User).where(
-                        (User.daily_ayah_enabled == True)
+                        (User.daily_ayah_enabled)
                         & (User.daily_ayah_hour == hour)
                         & (User.daily_ayah_minute == minute)
                     )
