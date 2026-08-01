@@ -6,7 +6,7 @@ A Telegram bot that engages users with daily Quranic content and other Islamic t
 
 ## Project Charter
 
-Project Charter is available in ['bot.md`](https://github.com/natiq-foundation/charters/blob/main/charters/bot.md).
+Project Charter is available in ['bot.md']https://github.com/natiq-foundation/charters/blob/main/charters/bot.md).
 
 ---
 
