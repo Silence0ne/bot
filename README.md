@@ -34,6 +34,7 @@ For faster local development without Docker:
 ```bash
 uv venv
 source .venv/bin/activate
+cp .env.example .env.local
 uv pip install -r requirements-dev.txt
 uv pip install -e .
 python -m app
