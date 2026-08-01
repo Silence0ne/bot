@@ -14,8 +14,6 @@ from app.schemas.ayah import Ayah
 
 logger = logging.getLogger(__name__)
 
-TAKHTIT_UUID = "36ec80c5-ef5f-4a83-808f-4b936b4a1d87"
-
 
 class NatiqProvider:
     def __init__(
@@ -26,6 +24,7 @@ class NatiqProvider:
         self._client = client
         self._cache = cache
         self._settings = get_settings()
+        self._takhtit_uuids: list[str] | None = None
 
     async def _get_with_retry(
         self,
@@ -67,6 +66,29 @@ class NatiqProvider:
 
         return []
 
+    async def _list_takhtit_uuids(self) -> list[str]:
+        if self._takhtit_uuids is not None:
+            return self._takhtit_uuids
+
+        response = await self._get_with_retry("/takhtits/")
+        data = response.json()
+
+        uuids: list[str] = []
+        if isinstance(data, list):
+            for item in data:
+                if isinstance(item, dict):
+                    u = item.get("uuid")
+                    if isinstance(u, str) and u:
+                        uuids.append(u)
+
+        if not uuids:
+            logger.warning("No takhtits found from /takhtits/")
+        else:
+            logger.info("Found %s takhtit uuids", len(uuids))
+
+        self._takhtit_uuids = uuids
+        return uuids
+
     async def list_ayahs(self) -> list[dict[str, Any]]:
         logger.info("Loading ayahs...")
 
@@ -103,35 +125,38 @@ class NatiqProvider:
     async def list_takhtits(self) -> list[dict[str, Any]]:
         logger.info("Loading takhtits...")
 
+        uuids = await self._list_takhtit_uuids()
+        if not uuids:
+            return []
+
+        # Choose strategy: use first UUID only (matches your earlier behavior).
+        # If you want to load all UUIDs, tell me and I'll adjust.
+        takhtit_uuid = uuids[0]
+        logger.info("Using takhtit_uuid=%s", takhtit_uuid)
+
         results: list[dict[str, Any]] = []
         seen: set[str] = set()
+
         offset = 0
         limit = 200
 
         while True:
             response = await self._get_with_retry(
-                f"/takhtits/{TAKHTIT_UUID}/ayahs_breakers/",
-                params={
-                    "offset": offset,
-                    "limit": limit,
-                },
+                f"/takhtits/{takhtit_uuid}/ayahs_breakers/",
+                params={"offset": offset, "limit": limit},
             )
 
             items = self._extract_list(response.json())
-
             if not items:
                 break
 
             added = 0
-
             for item in items:
-                uuid = item.get("uuid")
-
-                if uuid:
-                    if uuid in seen:
+                item_uuid = item.get("uuid")
+                if isinstance(item_uuid, str) and item_uuid:
+                    if item_uuid in seen:
                         continue
-
-                    seen.add(uuid)
+                    seen.add(item_uuid)
 
                 results.append(item)
                 added += 1
@@ -188,7 +213,10 @@ class NatiqProvider:
                 for item in translations:
                     translator = item.get("translator", {})
 
-                    if translator.get("name") == wanted:
+                    if (
+                        isinstance(translator, dict)
+                        and translator.get("name") == wanted
+                    ):
                         selected = item
                         break
 

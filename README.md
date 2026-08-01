@@ -6,7 +6,7 @@ A Telegram bot that engages users with daily Quranic content and other Islamic t
 
 ## Project Charter
 
-Project Charter is available in ['bot.md']https://github.com/natiq-foundation/charters/blob/main/charters/bot.md).
+Project Charter is available in ['Charters'](https://github.com/natiq-foundation/charters/blob/main/charters/bot.md).
 
 ---
 
@@ -25,17 +25,16 @@ docker compose up -d --build
 
 The bot service will start inside Docker Compose using the values from `.env.docker`.
 
-### Other methods
+### Development
 
 You can also run the project without Docker by creating a virtual environment, installing the project and development dependencies, and then starting the bot manually.
-
-### Development
 
 For faster local development without Docker:
 
 ```bash
 uv venv
 source .venv/bin/activate
+cp .env.example .env.local
 uv pip install -r requirements-dev.txt
 uv pip install -e .
 python -m app
