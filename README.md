@@ -25,11 +25,9 @@ docker compose up -d --build
 
 The bot service will start inside Docker Compose using the values from `.env.docker`.
 
-### Other methods
+### Development
 
 You can also run the project without Docker by creating a virtual environment, installing the project and development dependencies, and then starting the bot manually.
-
-### Development
 
 For faster local development without Docker:
 
