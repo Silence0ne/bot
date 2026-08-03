@@ -10,12 +10,13 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-quran_bot}"]
       interval: 5s
       timeout: 5s
       retries: 10
     ports:
-      - "${POSTGRES_PORT:-5432}:${POSTGRES_TARGET_PORT:-5432}"
+      - "${POSTGRES_PORT:-5432}:5432"
+
   redis:
     image: redis:7-alpine
     container_name: quran-redis
@@ -39,6 +40,9 @@ services:
     restart: unless-stopped
     env_file:
       - .env.docker
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/quran_bot
+      REDIS_URL: redis://redis:6379/0
     depends_on:
       postgres:
         condition: service_healthy
