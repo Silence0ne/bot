@@ -41,7 +41,7 @@ class Settings(BaseSettings):
 
     # Natiq API
     NATIQ_API_URL: str = ""
-    NATIQ_PRIMARY_API: str = ""
+    NATIQ_PRIMARY_API: str = "https://api.natiq.net/"
     NATIQ_API_TOKEN: str | None = None
     NATIQ_API_TIMEOUT: int = 120
 
