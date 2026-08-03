@@ -5,7 +5,6 @@ from datetime import date
 
 from sqlalchemy import select
 
-from app.database.models.user import User
 from app.database.session import Database
 
 logger = logging.getLogger(__name__)
