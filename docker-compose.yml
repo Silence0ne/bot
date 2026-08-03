@@ -14,7 +14,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-
+    ports:
+      - "${POSTGRES_PORT:-5432}:${POSTGRES_TARGET_PORT:-5432}"
   redis:
     image: redis:7-alpine
     container_name: quran-redis
