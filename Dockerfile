@@ -25,6 +25,11 @@ COPY app ./app
 COPY alembic ./alembic
 COPY alembic.ini ./
 
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+CMD ["/app/docker-entrypoint.sh"]
+
+
 # Install Python dependencies
 RUN pip install .[dev] 2>&1 | grep -i "successfully installed" || pip install .
 

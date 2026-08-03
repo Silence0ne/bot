@@ -4,7 +4,6 @@ import uuid
 from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey
-from sqlalchemy import UniqueConstraint
 
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
@@ -21,24 +20,16 @@ from app.database.models.mixins import (
 from app.database.types import UUIDType
 
 
-class Favorite(
+class SentHistory(
     Base,
     UUIDMixin,
     TimestampMixin,
 ):
     """
-    User favorite ayahs.
+    Stores the user's last reading position.
     """
 
-    __tablename__ = "favorites"
-
-    __table_args__ = (
-        UniqueConstraint(
-            "user_id",
-            "ayah_uuid",
-            name="uq_user_ayah",
-        ),
-    )
+    __tablename__ = "sent_history"
 
     id: Mapped[int] = mapped_column(
         primary_key=True,
@@ -49,15 +40,19 @@ class Favorite(
             "users.id",
             ondelete="CASCADE",
         ),
+        unique=True,
         index=True,
+    )
+
+    surah_uuid: Mapped[uuid.UUID] = mapped_column(
+        UUIDType(),
     )
 
     ayah_uuid: Mapped[uuid.UUID] = mapped_column(
         UUIDType(),
-        index=True,
     )
 
     user: Mapped["User"] = relationship(
         "User",
-        back_populates="favorites",
+        back_populates="sent_history",
     )

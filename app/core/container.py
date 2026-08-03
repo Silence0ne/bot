@@ -9,7 +9,6 @@ from app.cache.loader import QuranCacheLoader
 from app.cache.quran import QuranCache
 from app.cache.redis import RedisCache
 from app.database.session import Database
-from app.repositories.user_repository import UserRepository
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +39,6 @@ class Container:
             provider=self._provider,
             cache=self._cache,
         )
-        self._user_repository = UserRepository(self._database)
         self._quran_cache_ready = False
 
         logger.info("Container initialized.")
@@ -68,10 +66,6 @@ class Container:
     @property
     def loader(self) -> QuranCacheLoader:
         return self._loader
-
-    @property
-    def user_repository(self) -> UserRepository:
-        return self._user_repository
 
     @property
     def quran_cache_ready(self) -> bool:
