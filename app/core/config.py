@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     BOT_API: str = "https://api.telegram.org"
     PLATFORM: str = "TELEGRAM"
     BOT_LANGUAGE: str = "fa"
-    OPEN_IN_NATIQ_BASE_URL: str = ""
+    OPEN_IN_NATIQ_BASE_URL: str = "https://api.natiq.net/"
     ADMIN_USER_IDS: str = ""  # Comma-separated list
 
     # Database
@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://redis:6379/0"
 
     # Natiq API
-    NATIQ_API_URL: str = ""
+    NATIQ_API_URL: str = "https://api.natiq.net/"
     NATIQ_PRIMARY_API: str = "https://api.natiq.net/"
     NATIQ_API_TOKEN: str | None = None
     NATIQ_API_TIMEOUT: int = 120
