@@ -26,9 +26,9 @@ class Chat(
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    telegram_chat_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
+    chat_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
     title: Mapped[str | None] = mapped_column(String(255), nullable=True)
     chat_type: Mapped[str] = mapped_column(String(32))
-    daily_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
-    daily_time: Mapped[str] = mapped_column(String(5), default="08:00")
-    timezone: Mapped[str] = mapped_column(String(64), default="Asia/Tehran")
+    daily_ayah: Mapped[bool] = mapped_column(Boolean, default=False)
+    daily_time: Mapped[str] = mapped_column(String(5), default="15:15")
+    timezone: Mapped[str] = mapped_column(String(64), default="Asia/Riyad")
