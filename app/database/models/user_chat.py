@@ -6,6 +6,20 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.base import Base
 from app.database.models.mixins import TimestampMixin
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.database.models.user import User
+    from app.database.models.chat import Chat
+
+user: Mapped["User"] = relationship(
+    back_populates="chats",
+)
+
+chat: Mapped["Chat"] = relationship(
+    back_populates="user_chats",
+)
+
 
 class UserChat(Base, TimestampMixin):
     __tablename__ = "user_chats"

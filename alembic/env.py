@@ -9,7 +9,6 @@ from app.core.config import get_settings
 from app.database.base import Base
 
 # Import every model so Base.metadata is populated.
-import app.database.models  # noqa: F401
 
 config = context.config
 

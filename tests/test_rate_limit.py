@@ -3,7 +3,7 @@ import asyncio
 from app.bot.guards import rate_limit as rate_limit_module
 from app.bot.guards.rate_limit import InMemoryRateLimiter
 from app.database.base import Base as DatabaseBase
-from app.database.models.base import Base as ModelsBase
+from app.database.base import Base as ModelsBase
 
 
 class StubRedisCache:

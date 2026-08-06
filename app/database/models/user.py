@@ -6,6 +6,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.base import Base
 from app.database.models.mixins import TimestampMixin, UUIDMixin
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.database.models.user_chat import UserChat
+    from app.database.models.sent_history import SentHistory
+
 
 class User(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "users"
