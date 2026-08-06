@@ -89,8 +89,8 @@ extend-exclude = '''
 [tool.ruff]
 line-length = 88
 target-version = "py312"
-select = ["E", "F", "W"]
-ignore = ["E501"]  # Line too long (handled by black)
+lint.select = ["E", "F", "W"]
+lint.ignore = ["E501"]  # Line too long (handled by black)
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
