@@ -7,11 +7,15 @@ from sqlalchemy import create_engine
 
 from app.core.config import get_settings
 from app.database.base import Base
+from app.database.types import UUIDType
 
-# Import all models so SQLAlchemy registers tables in Base.metadata
+# Import every model so SQLAlchemy registers all tables.
+# Keep this import. Without it Alembic sees an empty metadata.
 import app.database.models  # noqa: F401
 
+
 config = context.config
+
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
@@ -22,7 +26,8 @@ settings = get_settings()
 
 def get_sync_database_url() -> str:
     """
-    Alembic uses a synchronous PostgreSQL driver.
+    Alembic migrations run synchronously.
+    Convert async application URLs into sync PostgreSQL URLs.
     """
 
     url = settings.DATABASE_URL
@@ -41,6 +46,7 @@ def get_sync_database_url() -> str:
 
 database_url = get_sync_database_url()
 
+
 config.set_main_option(
     "sqlalchemy.url",
     database_url,
@@ -50,7 +56,26 @@ config.set_main_option(
 target_metadata = Base.metadata
 
 
+def render_item(type_, obj, autogen_context):
+    """
+    Teach Alembic how to render custom SQLAlchemy types.
+    """
+
+    if type_ == "type":
+        if isinstance(obj, UUIDType):
+            autogen_context.imports.add(
+                "from app.database.types import UUIDType"
+            )
+            return "UUIDType()"
+
+    return False
+
+
 def run_migrations_offline() -> None:
+    """
+    Run migrations without creating a database connection.
+    """
+
     context.configure(
         url=database_url,
         target_metadata=target_metadata,
@@ -58,6 +83,7 @@ def run_migrations_offline() -> None:
         compare_type=True,
         compare_server_default=True,
         include_schemas=False,
+        render_item=render_item,
         dialect_opts={
             "paramstyle": "named",
         },
@@ -68,10 +94,14 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
+    """
+    Run migrations using a live database connection.
+    """
+
     engine = create_engine(
         database_url,
-        future=True,
         pool_pre_ping=True,
+        future=True,
     )
 
     with engine.connect() as connection:
@@ -81,6 +111,7 @@ def run_migrations_online() -> None:
             compare_type=True,
             compare_server_default=True,
             include_schemas=False,
+            render_item=render_item,
         )
 
         with context.begin_transaction():
