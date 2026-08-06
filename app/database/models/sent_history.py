@@ -12,7 +12,7 @@ from sqlalchemy.orm import relationship
 if TYPE_CHECKING:
     from app.database.models.user import User
 
-from app.database.models.base import Base
+from app.database.base import Base
 from app.database.models.mixins import (
     TimestampMixin,
     UUIDMixin,
