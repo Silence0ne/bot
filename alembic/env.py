@@ -13,7 +13,6 @@ from app.database.types import UUIDType
 # Keep this import. Without it Alembic sees an empty metadata.
 import app.database.models  # noqa: F401
 
-
 config = context.config
 
 
@@ -63,9 +62,7 @@ def render_item(type_, obj, autogen_context):
 
     if type_ == "type":
         if isinstance(obj, UUIDType):
-            autogen_context.imports.add(
-                "from app.database.types import UUIDType"
-            )
+            autogen_context.imports.add("from app.database.types import UUIDType")
             return "UUIDType()"
 
     return False
