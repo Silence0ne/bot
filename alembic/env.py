@@ -8,19 +8,21 @@ from sqlalchemy import create_engine
 from app.core.config import get_settings
 from app.database.base import Base
 
-# Import every model so Base.metadata is populated.
+# Import all models so SQLAlchemy registers tables in Base.metadata
+import app.database.models  # noqa: F401
 
 config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+
 settings = get_settings()
 
 
 def get_sync_database_url() -> str:
     """
-    Alembic should always use a synchronous driver.
+    Alembic uses a synchronous PostgreSQL driver.
     """
 
     url = settings.DATABASE_URL
@@ -43,6 +45,7 @@ config.set_main_option(
     "sqlalchemy.url",
     database_url,
 )
+
 
 target_metadata = Base.metadata
 
@@ -78,7 +81,6 @@ def run_migrations_online() -> None:
             compare_type=True,
             compare_server_default=True,
             include_schemas=False,
-            render_as_batch=False,
         )
 
         with context.begin_transaction():

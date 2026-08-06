@@ -12,6 +12,7 @@ RUN apt-get update \
         build-essential \
         libpq-dev \
         curl \
+        postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python -m pip install --upgrade pip setuptools wheel
