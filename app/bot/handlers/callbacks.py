@@ -9,7 +9,7 @@ from telegram.ext import CallbackQueryHandler, ContextTypes
 from app.api.checker import MessengerFeature
 from app.bot.handlers.random import format_ayah
 from app.core.container import Container
-from app.i18n import detect_language, get_message
+from app.i18n import get_message
 from app.schemas.ayah import Ayah
 from app.ui.keyboards.random import random_ayah_keyboard
 
@@ -20,7 +20,6 @@ async def _reply_with_ayah(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
     ayah: Ayah,
-    language: str,
 ) -> None:
     query = update.callback_query
 
@@ -39,16 +38,10 @@ async def _reply_with_ayah(
     if context.application.bot_data["feature_checker"].supports(
         MessengerFeature.INLINE_KEYBOARD
     ):
-        reply_markup = random_ayah_keyboard(
-            ayah.uuid,
-            language,
-        )
+        reply_markup = random_ayah_keyboard(ayah.uuid, "")
 
     await message.reply_text(
-        text=format_ayah(
-            ayah,
-            language,
-        ),
+        text=format_ayah(ayah),
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=reply_markup,
         reply_to_message_id=message.message_id,
@@ -70,20 +63,9 @@ async def _handle_next_ayah(
         container: Container = context.application.bot_data["container"]
         current_uuid = context.user_data.get("current_ayah_uuid")
 
-        language = detect_language(
-            update.effective_user.language_code
-            if update.effective_user
-            else context.user_data.get("bot_language")
-        )
-
-        context.user_data["bot_language"] = language
-
         if not container.quran_cache_ready:
             await query.answer(
-                get_message(
-                    "next_ayah_error",
-                    language,
-                ),
+                get_message("next_ayah_error"),
                 show_alert=True,
             )
             return
@@ -96,23 +78,12 @@ async def _handle_next_ayah(
             update,
             context,
             ayah,
-            language,
         )
 
     except Exception:
         logger.exception("Next ayah callback failed")
-
-        language = detect_language(
-            update.effective_user.language_code
-            if update.effective_user
-            else context.user_data.get("bot_language")
-        )
-
         await query.answer(
-            get_message(
-                "next_ayah_error",
-                language,
-            ),
+            get_message("next_ayah_error"),
             show_alert=True,
         )
 
@@ -131,20 +102,9 @@ async def random_ayah_callback(
     try:
         container: Container = context.application.bot_data["container"]
 
-        language = detect_language(
-            update.effective_user.language_code
-            if update.effective_user
-            else context.user_data.get("bot_language")
-        )
-
-        context.user_data["bot_language"] = language
-
         if not container.quran_cache_ready:
             await query.answer(
-                get_message(
-                    "next_ayah_error",
-                    language,
-                ),
+                get_message("next_ayah_error"),
                 show_alert=True,
             )
             return
@@ -155,23 +115,12 @@ async def random_ayah_callback(
             update,
             context,
             ayah,
-            language,
         )
 
     except Exception:
         logger.exception("Random ayah callback failed")
-
-        language = detect_language(
-            update.effective_user.language_code
-            if update.effective_user
-            else context.user_data.get("bot_language")
-        )
-
         await query.answer(
-            get_message(
-                "next_ayah_error",
-                language,
-            ),
+            get_message("next_ayah_error"),
             show_alert=True,
         )
 

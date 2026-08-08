@@ -38,7 +38,7 @@ def test_format_ayah_includes_makki_icon() -> None:
 
     text = format_ayah(ayah)
 
-    assert "🕋 *سوره الفاتحة*" in text
+    assert "🕋 *الفاتحة*" in text
     assert "📖 *sample text ﴿7﴾*" in text
     assert "📝 sample translation (7)" in text
     assert "@NatiqBot" in text
@@ -52,7 +52,7 @@ def test_format_ayah_includes_madani_icon() -> None:
 
     text = format_ayah(ayah)
 
-    assert "🕌 *سوره الفاتحة*" in text
+    assert "🕌 *الفاتحة*" in text
 
 
 def test_format_ayah_omits_extra_space_without_icon() -> None:
@@ -63,9 +63,9 @@ def test_format_ayah_omits_extra_space_without_icon() -> None:
 
     text = format_ayah(ayah)
 
-    assert "*سوره الفاتحة*" in text
+    assert "*الفاتحة*" in text
     assert "\n\n📖 *sample text ﴿7﴾*" in text
-    assert " *سوره الفاتحة*" not in text
+    assert " *الفاتحة*" not in text
 
 
 def test_format_ayah_shows_bismillah_line_for_first_non_bismillah_ayah() -> None:

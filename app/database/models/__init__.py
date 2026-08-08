@@ -1,11 +1,11 @@
-from app.database.models.base import Base
 from app.database.models.chat import Chat
+from app.database.models.sent_history import SentHistory
+from app.database.models.user import User
+from app.database.models.user_chat import UserChat
 
-__all__ = (
-    "Base",
+__all__ = [
     "Chat",
-    "Favorite",
-    "ReadingProgress",
+    "SentHistory",
     "User",
     "UserChat",
-)
+]

@@ -9,53 +9,38 @@ from telegram.ext import CommandHandler, ContextTypes
 from app.api.checker import MessengerFeature
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
 from app.core.container import Container
-from app.i18n import detect_language, get_message
+from app.i18n import get_message
 from app.schemas.ayah import Ayah
 from app.ui.keyboards import random_ayah_keyboard
 
 logger = logging.getLogger(__name__)
 
 
-def format_ayah(
-    ayah: Ayah,
-    language: str = "fa",
-) -> str:
-    surah_label = get_message("surah_label", language)
-    translation_line = ""
+def format_ayah(ayah: Ayah) -> str:
+    """Format ayah in a language-agnostic way."""
+    parts: list[str] = []
 
-    if ayah.translation:
-        translation_line = (
-            f"{get_message('translation_label', language)} "
-            f"{ayah.translation} ({ayah.ayah_number})\n\n"
-        )
+    # Surah header: makki/madani icon + surah name (no trailing space if no icon)
+    if ayah.surah_icon:
+        parts.append(f"{ayah.surah_icon} *{ayah.surah_name}*")
+    else:
+        parts.append(f"*{ayah.surah_name}*")
 
-    title = f"{ayah.surah_name} {ayah.surah_icon}".strip()
-
-    bismillah_line = ""
-
+    # Bismillah (shown before the ayah text when applicable)
     if ayah.show_bismillah_line and ayah.bismillah_text:
-        bismillah_line = f"{ayah.bismillah_text}\n\n"
+        parts.append(ayah.bismillah_text)
 
-    if language == "fa":
-        surah_title = f"{ayah.surah_icon} *{surah_label} {ayah.surah_name}*".strip()
-        return (
-            f"{surah_title}\n\n"
-            f"{bismillah_line}"
-            f"📖 *{ayah.text} ﴿{ayah.ayah_number}﴾*\n\n"
-            f"{translation_line}"
-            "@NatiqBot"
-        )
+    # Ayah text
+    parts.append(f"📖 *{ayah.text} ﴿{ayah.ayah_number}﴾*")
 
-    text = (
-        f"📖 {title}\n"
-        f"﴿ {ayah.text} ﴾\n\n"
-        f"آیه {ayah.ayah_number} | سوره {ayah.surah_number}"
-    )
-
+    # Translation (if available)
     if ayah.translation:
-        text += "\n\nترجمه:\n" f"{ayah.translation}"
+        parts.append(f"📝 {ayah.translation} ({ayah.ayah_number})")
 
-    return text
+    # Attribution
+    parts.append("@NatiqBot")
+
+    return "\n\n".join(parts)
 
 
 @rate_limit(
@@ -68,9 +53,7 @@ async def random_ayah(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
-    """
-    Send a random Quran ayah.
-    """
+    """Send a random Quran ayah."""
     if not update.message:
         return
 
@@ -78,25 +61,11 @@ async def random_ayah(
         container: Container = context.application.bot_data["container"]
 
         if not container.quran_cache_ready:
-            await update.message.reply_text(
-                get_message(
-                    "random_ayah_error",
-                    detect_language(
-                        update.effective_user.language_code
-                        if update.effective_user
-                        else None
-                    ),
-                )
-            )
+            await update.message.reply_text(get_message("random_ayah_error"))
             return
 
         ayah: Ayah = await container.provider.random_ayah()
 
-        language = detect_language(
-            update.effective_user.language_code if update.effective_user else None
-        )
-
-        context.user_data["bot_language"] = language
         context.user_data["current_ayah_uuid"] = ayah.uuid
 
         reply_markup = None
@@ -104,32 +73,18 @@ async def random_ayah(
         if context.application.bot_data["feature_checker"].supports(
             MessengerFeature.INLINE_KEYBOARD
         ):
-            reply_markup = random_ayah_keyboard(
-                ayah.uuid,
-                language,
-            )
+            reply_markup = random_ayah_keyboard(ayah.uuid, "")
 
         await update.message.reply_text(
-            text=format_ayah(
-                ayah,
-                language,
-            ),
+            text=format_ayah(ayah),
             parse_mode=ParseMode.MARKDOWN,
             reply_markup=reply_markup,
         )
 
     except Exception as exc:
         logger.exception("Random ayah failed: %s", exc)
-
-        language = detect_language(
-            update.effective_user.language_code if update.effective_user else None
-        )
-
-        await update.message.reply_text(get_message("random_ayah_error", language))
+        await update.message.reply_text(get_message("random_ayah_error"))
 
 
 def get_handler() -> CommandHandler:
-    return CommandHandler(
-        "random",
-        random_ayah,
-    )
+    return CommandHandler("random", random_ayah)

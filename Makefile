@@ -1,6 +1,9 @@
 up:
 	docker compose up --build
 
+kill:
+	docker compose down -v
+
 down:
 	docker compose down
 
