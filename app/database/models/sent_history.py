@@ -4,55 +4,38 @@ import uuid
 from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey
-
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import relationship
-
-if TYPE_CHECKING:
-    from app.database.models.user import User
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
-from app.database.models.mixins import (
-    TimestampMixin,
-    UUIDMixin,
-)
+from app.database.models.mixins import TimestampMixin, UUIDMixin
 from app.database.types import UUIDType
 
+if TYPE_CHECKING:
+    from app.database.models.chat import Chat
 
-class SentHistory(
-    Base,
-    UUIDMixin,
-    TimestampMixin,
-):
+
+class SentHistory(Base, UUIDMixin, TimestampMixin):
     """
-    Stores the user's last reading position.
+    Stores the chat's last reading position (surah and ayah).
     """
 
     __tablename__ = "sent_history"
 
-    id: Mapped[int] = mapped_column(
-        primary_key=True,
-    )
-
-    user_id: Mapped[int] = mapped_column(
+    chat_uuid: Mapped[uuid.UUID] = mapped_column(
+        UUIDType(),
         ForeignKey(
-            "users.id",
+            "chats.uuid",
             ondelete="CASCADE",
         ),
         unique=True,
         index=True,
     )
 
-    surah_uuid: Mapped[uuid.UUID] = mapped_column(
-        UUIDType(),
-    )
+    surah_uuid: Mapped[uuid.UUID] = mapped_column(UUIDType())
 
-    ayah_uuid: Mapped[uuid.UUID] = mapped_column(
-        UUIDType(),
-    )
+    ayah_uuid: Mapped[uuid.UUID] = mapped_column(UUIDType())
 
-    user: Mapped["User"] = relationship(
-        "User",
+    chat: Mapped["Chat"] = relationship(
+        "Chat",
         back_populates="sent_history",
     )
