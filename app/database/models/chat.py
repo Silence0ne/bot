@@ -23,7 +23,6 @@ class Chat(Base, UUIDMixin, TimestampMixin):
     title: Mapped[str | None] = mapped_column(String(255), nullable=True)
     first_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     last_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    username: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Preferences
     language: Mapped[str] = mapped_column(String(10), default="fa")

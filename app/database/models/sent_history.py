@@ -21,7 +21,7 @@ class SentHistory(Base, UUIDMixin, TimestampMixin):
 
     __tablename__ = "sent_history"
 
-    chat_uuid: Mapped[uuid.UUID] = mapped_column(
+    chat_id: Mapped[uuid.UUID] = mapped_column(
         UUIDType(),
         ForeignKey(
             "chats.uuid",
@@ -30,8 +30,6 @@ class SentHistory(Base, UUIDMixin, TimestampMixin):
         unique=True,
         index=True,
     )
-
-    surah_uuid: Mapped[uuid.UUID] = mapped_column(UUIDType())
 
     ayah_uuid: Mapped[uuid.UUID] = mapped_column(UUIDType())
 
