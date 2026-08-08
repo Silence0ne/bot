@@ -16,46 +16,19 @@ from app.ui.keyboards import random_ayah_keyboard
 logger = logging.getLogger(__name__)
 
 
-def format_ayah(
-    ayah: Ayah,
-    language: str = "fa",
-) -> str:
-    surah_label = get_message("surah_label", language)
+def format_ayah(ayah: Ayah) -> str:
+    surah_line = f"🕋 {ayah.surah_icon} *سوره {ayah.surah_name}*".strip()
+    ayah_line = f"📖 *{ayah.text} ﴿{ayah.ayah_number}﴾*"
+
     translation_line = ""
-
     if ayah.translation:
-        translation_line = (
-            f"{get_message('translation_label', language)} "
-            f"{ayah.translation} ({ayah.ayah_number})\n\n"
-        )
+        translation_line = f"📝 {ayah.translation} ({ayah.ayah_number})"
 
-    title = f"{ayah.surah_name} {ayah.surah_icon}".strip()
+    text = f"{surah_line}\n\n{ayah_line}"
+    if translation_line:
+        text += f"\n\n{translation_line}"
 
-    bismillah_line = ""
-
-    if ayah.show_bismillah_line and ayah.bismillah_text:
-        bismillah_line = f"{ayah.bismillah_text}\n\n"
-
-    if language == "fa":
-        surah_title = f"{ayah.surah_icon} *{surah_label} {ayah.surah_name}*".strip()
-        return (
-            f"{surah_title}\n\n"
-            f"{bismillah_line}"
-            f"📖 *{ayah.text} ﴿{ayah.ayah_number}﴾*\n\n"
-            f"{translation_line}"
-            "@NatiqBot"
-        )
-
-    text = (
-        f"📖 {title}\n"
-        f"﴿ {ayah.text} ﴾\n\n"
-        f"آیه {ayah.ayah_number} | سوره {ayah.surah_number}"
-    )
-
-    if ayah.translation:
-        text += "\n\nترجمه:\n" f"{ayah.translation}"
-
-    return text
+    return f"{text}\n\n@NatiqBot"
 
 
 @rate_limit(
@@ -68,9 +41,6 @@ async def random_ayah(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
-    """
-    Send a random Quran ayah.
-    """
     if not update.message:
         return
 
@@ -78,42 +48,20 @@ async def random_ayah(
         container: Container = context.application.bot_data["container"]
 
         if not container.quran_cache_ready:
-            await update.message.reply_text(
-                get_message(
-                    "random_ayah_error",
-                    detect_language(
-                        update.effective_user.language_code
-                        if update.effective_user
-                        else None
-                    ),
-                )
-            )
+            await update.message.reply_text(get_message("random_ayah_error"))
             return
 
         ayah: Ayah = await container.provider.random_ayah()
-
-        language = detect_language(
-            update.effective_user.language_code if update.effective_user else None
-        )
-
-        context.user_data["bot_language"] = language
         context.user_data["current_ayah_uuid"] = ayah.uuid
 
         reply_markup = None
-
         if context.application.bot_data["feature_checker"].supports(
             MessengerFeature.INLINE_KEYBOARD
         ):
-            reply_markup = random_ayah_keyboard(
-                ayah.uuid,
-                language,
-            )
+            reply_markup = random_ayah_keyboard(ayah.uuid)
 
         await update.message.reply_text(
-            text=format_ayah(
-                ayah,
-                language,
-            ),
+            text=format_ayah(ayah),
             parse_mode=ParseMode.MARKDOWN,
             reply_markup=reply_markup,
         )
@@ -124,12 +72,9 @@ async def random_ayah(
         language = detect_language(
             update.effective_user.language_code if update.effective_user else None
         )
-
         await update.message.reply_text(get_message("random_ayah_error", language))
 
 
 def get_handler() -> CommandHandler:
-    return CommandHandler(
-        "random",
-        random_ayah,
-    )
+    return CommandHandler("random", random_ayah)
+
