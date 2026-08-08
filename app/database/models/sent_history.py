@@ -30,7 +30,7 @@ class SentHistory(Base, UUIDMixin, TimestampMixin):
         unique=True,
         index=True,
     )
-
+    type: Mapped[str] = mapped_column(String(32))
     ayah_uuid: Mapped[uuid.UUID] = mapped_column(UUIDType())
 
     chat: Mapped["Chat"] = relationship(
