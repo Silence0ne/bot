@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes
@@ -12,22 +12,25 @@ from app.core.container import Container
 from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
 
+if TYPE_CHECKING:
+    from app.database.models.chat import Chat
+
 
 class SupportsAdminLookup(Protocol):
-    async def is_superadmin(self, telegram_id: int) -> bool: ...
+    async def get_by_telegram_id(self, telegram_id: int) -> "Chat | None": ...
 
 
 async def _resolve_is_superadmin(
     telegram_id: int,
     *,
     configured_admin_ids: set[int],
-    user_repository: SupportsAdminLookup,
+    chat_repository: SupportsAdminLookup,
 ) -> bool:
     """
     A user is an admin if either is true:
 
     - their numeric ID is listed in the `ADMIN_USER_IDS` setting, or
-    - their `users.is_superadmin` database column is set to true.
+    - their `chats.is_admin` database column is set to true.
 
     The env-based check is tried first since it never requires a
     database round-trip.
@@ -35,7 +38,8 @@ async def _resolve_is_superadmin(
     if telegram_id in configured_admin_ids:
         return True
 
-    return await user_repository.is_superadmin(telegram_id)
+    chat = await chat_repository.get_by_telegram_id(telegram_id)
+    return chat is not None and chat.is_admin
 
 
 async def _is_superadmin(
@@ -53,7 +57,7 @@ async def _is_superadmin(
     return await _resolve_is_superadmin(
         user.id,
         configured_admin_ids=settings.admin_user_ids,
-        user_repository=container.user_repository,
+        chat_repository=container.chat_repository,  # <-- Changed here
     )
 
 

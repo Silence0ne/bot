@@ -4,7 +4,7 @@ import enum
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import Enum, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -22,7 +22,7 @@ class ReadingMode(str, enum.Enum):
 
 class SentHistory(Base, UUIDMixin, TimestampMixin):
     """
-    Stores the chat's last reading position (surah and ayah).
+    Stores the chat's last reading position and tracking mode.
     """
 
     __tablename__ = "sent_history"
@@ -35,6 +35,12 @@ class SentHistory(Base, UUIDMixin, TimestampMixin):
         ),
         unique=True,
         index=True,
+    )
+
+    type: Mapped[ReadingMode] = mapped_column(
+        Enum(ReadingMode, native_enum=False, length=5),
+        default=ReadingMode.AYAH,
+        nullable=False,
     )
 
     ayah_uuid: Mapped[uuid.UUID] = mapped_column(UUIDType())
