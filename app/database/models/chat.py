@@ -26,7 +26,7 @@ class Chat(Base, UUIDMixin, TimestampMixin):
 
     # Preferences
     language: Mapped[str] = mapped_column(String(10), default="fa")
-    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_superadmin: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # Daily Ayah Settings
     daily_ayah: Mapped[bool] = mapped_column(Boolean, default=False)

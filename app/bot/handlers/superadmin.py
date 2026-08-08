@@ -14,10 +14,10 @@ from app.ui.keyboards import main_menu_keyboard
 
 
 class SupportsAdminLookup(Protocol):
-    async def is_admin(self, telegram_id: int) -> bool: ...
+    async def is_superadmin(self, telegram_id: int) -> bool: ...
 
 
-async def _resolve_is_admin(
+async def _resolve_is_superadmin(
     telegram_id: int,
     *,
     configured_admin_ids: set[int],
@@ -27,7 +27,7 @@ async def _resolve_is_admin(
     A user is an admin if either is true:
 
     - their numeric ID is listed in the `ADMIN_USER_IDS` setting, or
-    - their `users.is_admin` database column is set to true.
+    - their `users.is_superadmin` database column is set to true.
 
     The env-based check is tried first since it never requires a
     database round-trip.
@@ -35,10 +35,10 @@ async def _resolve_is_admin(
     if telegram_id in configured_admin_ids:
         return True
 
-    return await user_repository.is_admin(telegram_id)
+    return await user_repository.is_superadmin(telegram_id)
 
 
-async def _is_admin(
+async def _is_superadmin(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> bool:
@@ -50,7 +50,7 @@ async def _is_admin(
     settings = get_settings()
     container: Container = context.application.bot_data["container"]
 
-    return await _resolve_is_admin(
+    return await _resolve_is_superadmin(
         user.id,
         configured_admin_ids=settings.admin_user_ids,
         user_repository=container.user_repository,
@@ -124,7 +124,7 @@ async def reload_quran_cache(
         update.effective_user.language_code if update.effective_user else None
     )
 
-    if not await _is_admin(update, context):
+    if not await _is_superadmin(update, context):
         await _reply_admin_denied(update, context)
         return
 
@@ -157,7 +157,7 @@ async def admin_settings_entry(
     if not update.message:
         return
 
-    if not await _is_admin(update, context):
+    if not await _is_superadmin(update, context):
         await _reply_admin_denied(update, context)
         return
 
