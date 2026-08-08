@@ -3,7 +3,7 @@ from __future__ import annotations
 from telegram.ext import Application
 
 from app.api.checker import MessengerFeature
-from app.bot.handlers.admin import (
+from app.bot.handlers.superadmin import (
     get_command_handler as get_admin_handler,
     get_reload_cache_handler,
 )
