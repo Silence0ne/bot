@@ -1,0 +1,17 @@
+{
+  "start": "In the name of Allah, the Most Compassionate, the Most Merciful\n\nWelcome to Natiq Quran Bot.\n\nThis bot is designed to deliver and display Quranic content and can send you random ayahs together with their translations.\n\nUse the menu below to choose Random Ayah directly. You can also use /random to receive a random ayah and /help to view the command list.",
+  "surah_label": "Surah",
+  "translation_label": "📝",
+  "main_menu_random_button": "Random Ayah",
+  "main_menu_admin_button": "Admin Settings",
+  "next_ayah_button": "Next Ayah",
+  "random_ayah_error": "Failed to fetch the ayah.",
+  "next_ayah_error": "Failed to fetch the ayah",
+  "help": "Natiq Bot Help\n\nAvailable commands:\n/start - Start the bot and show the main menu\n/help - Show this help message\n/random - Receive a random ayah\n/admin - Open the admin settings area\n\nMain menu buttons:\n- Random Ayah: send a random ayah\n- Admin Settings: open the administrative settings area (admins only)\n\nAdmin-only commands:\n/reload_cache - Reload the Quran cache without restarting the bot\n\nAfter receiving an ayah, the Next Ayah button will also appear when the messaging platform supports inline buttons.",
+  "admin_dashboard": "Bot Admin Dashboard\n\nYour user ID: {user_id}\nConfigured admin count: {configured_admin_count}\nPlatform: {platform}\nDefault bot language: {bot_language}\nQuran cache ready: {quran_cache_ready}\nInline keyboard support: {inline_keyboard_supported}\nCallback query support: {callback_query_supported}\n\nAvailable admin command:\n/reload_cache - Reload the Quran cache without restarting the bot",
+  "admin_access_denied": "You do not have access to the admin area. To enable this section, your numeric user ID must be included in the `ADMIN_USER_IDS` setting, or your database user record must have `is_admin` set to true.",
+  "admin_cache_reloading": "Reloading Quran cache... please wait.",
+  "admin_cache_reload_success": "The Quran cache was reloaded successfully.",
+  "admin_cache_reload_failed": "Reloading the Quran cache failed. Please check the bot logs.",
+  "rate_limited": "You sent too many requests in a short time. Please wait a moment and try again."
+}
