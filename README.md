@@ -15,7 +15,7 @@ Project Charter is available in ['Charters'](https://github.com/natiq-foundation
 ### With Docker (recommended)
 
 ```bash
-git clone https://github.com/your-org/your-repo.git
+git clone https://github.com/natiq-foundation/bot
 cd your-repo
 cp .env.example .env.docker
 # edit .env.docker with your settings
