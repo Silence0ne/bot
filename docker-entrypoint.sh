@@ -21,11 +21,13 @@ if [ -n "$MIGRATION_FILE" ] && [ -f "$MIGRATION_FILE" ]; then
         rm "$MIGRATION_FILE"
     else
         echo "New migration created: $MIGRATION_FILE"
+        echo "Applying migrations..."
+        alembic upgrade head
     fi
+else
+    echo "Applying migrations..."
+    alembic upgrade head
 fi
-
-echo "Applying migrations..."
-alembic upgrade head
 
 echo "Starting Quran Bot..."
 exec python -m app

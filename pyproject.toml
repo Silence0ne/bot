@@ -25,23 +25,23 @@ classifiers = [
 dependencies = [
     # Telegram
     "python-telegram-bot[job-queue]>=22.2",
-    
+
     # Database
     "SQLAlchemy>=2.0",
     "asyncpg>=0.28",
-    "psycopg[binary]>=3.2",
+    "psycopg2-binary>=2.9",
     "alembic>=1.12",
-    
+
     # Cache
     "redis[hiredis]>=5.0",
-    
+
     # HTTP
     "httpx>=0.24",
-    
+
     # Config
     "pydantic>=2.0",
     "pydantic-settings>=2.0",
-    
+
     # Logging
     "python-json-logger>=2.0",
 ]
@@ -94,7 +94,7 @@ lint.ignore = ["E501"]  # Line too long (handled by black)
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-pythonpath = ["."] 
+pythonpath = ["."]
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 

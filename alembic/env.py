@@ -2,16 +2,15 @@ from __future__ import annotations
 
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import create_engine
-
-from app.core.config import get_settings
-from app.database.base import Base
-from app.database.types import UUIDType
 
 # Import every model so SQLAlchemy registers all tables.
 # Keep this import. Without it Alembic sees an empty metadata.
 import app.database.models  # noqa: F401
+from alembic import context
+from app.core.config import get_settings
+from app.database.base import Base
+from app.database.types import UUIDType
 
 config = context.config
 
@@ -32,8 +31,8 @@ def get_sync_database_url() -> str:
     url = settings.DATABASE_URL
 
     replacements = {
-        "postgresql+asyncpg://": "postgresql+psycopg://",
-        "postgresql://": "postgresql+psycopg://",
+        "postgresql+asyncpg://": "postgresql+psycopg2://",
+        "postgresql://": "postgresql+psycopg2://",
     }
 
     for old, new in replacements.items():
