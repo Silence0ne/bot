@@ -183,8 +183,6 @@ class ChatRepository:
         *,
         sent_pages: bool = False,
     ) -> None:
-        from app.database.models.chat import Chat
-
         async with self._database.session() as session:
             chat = await self._get_by_telegram_id(session, telegram_id)
             if chat is None:

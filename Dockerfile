@@ -13,7 +13,8 @@ RUN apt-get update \
         libpq-dev \
         curl \
         postgresql-client \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install psycopg2-binary
 
 RUN python -m pip install --upgrade pip setuptools wheel
 
