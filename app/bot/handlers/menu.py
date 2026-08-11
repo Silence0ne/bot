@@ -6,7 +6,6 @@ from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters
 
 from app.bot.handlers.random import random_ayah
-from app.bot.handlers.superadmin import admin_settings_entry
 from app.i18n import SupportedLanguage, detect_language, get_message
 
 MenuAction = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]

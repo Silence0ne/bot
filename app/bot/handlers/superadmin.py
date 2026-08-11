@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import shutil
 from typing import TYPE_CHECKING, Protocol
 
+import psutil
 from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes
 
-from app.api.checker import MessengerFeature
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
 from app.core.config import get_settings
 from app.core.container import Container
@@ -59,11 +60,6 @@ async def _is_superadmin(
         configured_admin_ids=settings.admin_user_ids,
         chat_repository=container.chat_repository,  # <-- Changed here
     )
-
-
-import shutil
-
-import psutil
 
 
 async def _get_system_stats(context: ContextTypes.DEFAULT_TYPE) -> str:
