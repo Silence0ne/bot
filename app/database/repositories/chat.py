@@ -72,7 +72,9 @@ class ChatRepository:
             session.add(chat)
             await session.commit()
             await session.refresh(chat)
-            logger.info("Created chat record: chat_id=%s type=%s", telegram_id, chat_type)
+            logger.info(
+                "Created chat record: chat_id=%s type=%s", telegram_id, chat_type
+            )
             return chat
 
     async def upsert_from_update(
@@ -257,7 +259,9 @@ class ChatRepository:
             due_hour = int(hour_str)
             due_minute = int(minute_str)
         except ValueError:
-            logger.warning("Invalid daily_time for chat_id=%s: %s", chat.chat_id, chat.daily_time)
+            logger.warning(
+                "Invalid daily_time for chat_id=%s: %s", chat.chat_id, chat.daily_time
+            )
             return False
 
         return now.hour == due_hour and now.minute == due_minute
