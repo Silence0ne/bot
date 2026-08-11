@@ -4,7 +4,7 @@ import logging
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 if TYPE_CHECKING:
     from app.database.models.sent_history import SentHistory
@@ -17,13 +17,21 @@ class SentHistoryRepository:
     def __init__(self, database: "Database") -> None:
         self._database = database
 
-    async def get_by_chat_uuid(self, chat_uuid: uuid.UUID) -> "SentHistory | None":
+    async def count_all_sent(self) -> int:
         from app.database.models.sent_history import SentHistory
 
         async with self._database.session() as session:
-            stmt = select(SentHistory).where(SentHistory.chat_id == chat_uuid)
+            stmt = select(func.count()).select_from(SentHistory)
             result = await session.execute(stmt)
-            return result.scalar_one_or_none()
+            return int(result.scalar() or 0)
+
+    async def get_all_history(self) -> list["SentHistory"]:
+        from app.database.models.sent_history import SentHistory
+
+        async with self._database.session() as session:
+            stmt = select(SentHistory)
+            result = await session.execute(stmt)
+            return list(result.scalars().all())
 
     async def upsert_position(
         self,

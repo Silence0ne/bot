@@ -194,7 +194,9 @@ class ChatRepository:
             else:
                 chat.total_ayahs_sent += 1
 
+            session.add(chat)
             await session.commit()
+            await session.refresh(chat)
 
     async def count_by_type(self) -> dict[str, int]:
         from app.database.models.chat import Chat
