@@ -58,3 +58,7 @@ class Chat(Base, UUIDMixin, TimestampMixin):
     def daily_ayah_minute(self) -> int:
         _hour, minute = self.daily_time.split(":", 1)
         return int(minute)
+
+    @property
+    def total_sent(self) -> int:
+        return self.total_ayahs_sent + self.total_pages_sent

@@ -61,29 +61,49 @@ async def _is_superadmin(
     )
 
 
+import shutil
+
+import psutil
+
+
+async def _get_system_stats(context: ContextTypes.DEFAULT_TYPE) -> str:
+    cpu_usage = psutil.cpu_percent(interval=None)
+    ram = psutil.virtual_memory()
+    disk = shutil.disk_usage("/")
+
+    container: Container = context.application.bot_data["container"]
+    user_counts = await container.chat_repository.count_by_type()
+    total_users = sum(user_counts.values())
+
+    return (
+        f"🖥 CPU: {cpu_usage}%\n"
+        f"💾 RAM: {ram.percent}% ({ram.used // 1024**2}MB / {ram.total // 1024**2}MB)\n"
+        f"💽 Disk: {disk.percent}% ({disk.used // 1024**3}GB / {disk.total // 1024**3}GB)\n"
+        f"👥 Total Users: {total_users}"
+    )
+
+
 def _build_admin_dashboard(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
     language: str,
+    stats: str,
+    totals: dict[str, int],
 ) -> str:
     settings = get_settings()
     container: Container = context.application.bot_data["container"]
-    feature_checker = context.application.bot_data["feature_checker"]
-    user_id = update.effective_user.id if update.effective_user else None
 
-    callback_query_supported = feature_checker.supports(MessengerFeature.CALLBACK_QUERY)
-    inline_keyboard_supported = feature_checker.supports(
-        MessengerFeature.INLINE_KEYBOARD
-    )
-
+    # Check if `admin_dashboard` message supports new placeholders.
+    # Note: If your locale file `messages.json` (or equivalent) does not
+    # contain the new keys, ensure they are added there as well.
     return get_message("admin_dashboard", language).format(
-        user_id=user_id or "-",
-        platform=settings.PLATFORM,
+        stats=stats,
+        total_ayahs=totals["ayahs"],
+        total_pages=totals["pages"],
+        quran_cache_ready="✅" if container.quran_cache_ready else "❌",
+        bot_id=context.bot.id,
         bot_language=settings.BOT_LANGUAGE,
-        quran_cache_ready="yes" if container.quran_cache_ready else "no",
-        inline_keyboard_supported="yes" if inline_keyboard_supported else "no",
-        callback_query_supported="yes" if callback_query_supported else "no",
-        configured_admin_count=len(settings.admin_user_ids),
+        api_status="✅",
     )
 
 
@@ -169,14 +189,18 @@ async def admin_settings_entry(
         update.effective_user.language_code if update.effective_user else None
     )
 
+    container: Container = context.application.bot_data["container"]
+    stats = await _get_system_stats(context)
+    totals = await container.chat_repository.get_send_totals()
+
     await update.message.reply_text(
-        _build_admin_dashboard(update, context, language),
+        _build_admin_dashboard(update, context, language, stats, totals),
         reply_markup=main_menu_keyboard(language),
     )
 
 
 def get_command_handler() -> CommandHandler:
-    return CommandHandler("admin", admin_settings_entry)
+    return CommandHandler("superadmin", admin_settings_entry)
 
 
 def get_reload_cache_handler() -> CommandHandler:
