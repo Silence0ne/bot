@@ -20,6 +20,13 @@ class ParseMode(str, Enum):
     MARKDOWN = "MarkdownV2"
 
 
+class ContentMode(str, Enum):
+    RANDOM_AYAH = "random_ayah"
+    RANDOM_PAGE = "random_page"
+    SPECIFIC_AYAH = "specific_ayah"
+    SPECIFIC_PAGE = "specific_page"
+
+
 class UserState(str, Enum):
     NONE = "none"
 
@@ -30,6 +37,12 @@ class UserState(str, Enum):
     SELECT_TRANSLATION = "select_translation"
 
     SELECT_RECITER = "select_reciter"
+
+    AWAIT_PAGE_NUMBER = "await_page_number"
+
+    AWAIT_SURAH_NUMBER = "await_surah_number"
+
+    AWAIT_AYAH_NUMBER = "await_ayah_number"
 
 
 class CachePrefix(str, Enum):
