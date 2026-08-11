@@ -36,6 +36,14 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@postgres:5432/quran_bot"
 
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def validate_database_url(cls, v: str) -> str:
+        """Ensure DATABASE_URL is not empty."""
+        if not v or not v.strip():
+            raise ValueError("DATABASE_URL must be set")
+        return v.strip()
+
     # Redis
     REDIS_URL: str = "redis://redis:6379/0"
 

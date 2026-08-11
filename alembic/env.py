@@ -31,8 +31,8 @@ def get_sync_database_url() -> str:
     url = settings.DATABASE_URL
 
     replacements = {
-        "postgresql+asyncpg://": "postgresql+psycopg2://",
-        "postgresql://": "postgresql+psycopg2://",
+        "postgresql+asyncpg://": "postgresql+asyncpg://",
+        "postgresql://": "postgresql+asyncpg://",
     }
 
     for old, new in replacements.items():
