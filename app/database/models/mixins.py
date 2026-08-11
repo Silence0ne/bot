@@ -12,18 +12,15 @@ from app.database.types import UUIDType
 
 
 class UUIDMixin:
-
     uuid: Mapped[uuid.UUID] = mapped_column(
         UUIDType(),
         default=uuid.uuid4,
-        unique=True,
+        primary_key=True,
         nullable=False,
-        index=True,
     )
 
 
 class TimestampMixin:
-
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

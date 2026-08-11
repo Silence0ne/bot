@@ -93,11 +93,7 @@ def configure_rate_limiter(
 
 
 def _resolve_actor_key(update: Update) -> str | None:
-    user = update.effective_user
     chat = update.effective_chat
-
-    if user and user.id is not None:
-        return f"user:{user.id}"
 
     if chat and chat.id is not None:
         return f"chat:{chat.id}"

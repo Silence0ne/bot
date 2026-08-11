@@ -47,6 +47,7 @@ def create_application(
     application = builder.build()
 
     application.bot_data["container"] = container
+    application.bot_data["user_repository"] = container.chat_repository
     application.bot_data["feature_checker"] = feature_checker
 
     register_handlers(application)

@@ -8,6 +8,8 @@ from app.bot.guards.rate_limit import configure_rate_limiter
 from app.cache.loader import QuranCacheLoader
 from app.cache.quran import QuranCache
 from app.cache.redis import RedisCache
+from app.database.repositories.chat import ChatRepository
+from app.database.repositories.sent_history import SentHistoryRepository
 from app.database.session import Database
 
 logger = logging.getLogger(__name__)
@@ -24,6 +26,7 @@ class Container:
     - Quran cache
     - Quran provider
     - Cache loading
+    - Repositories
     """
 
     def __init__(self) -> None:
@@ -39,6 +42,11 @@ class Container:
             provider=self._provider,
             cache=self._cache,
         )
+
+        # Repositories
+        self._chat_repository = ChatRepository(self._database)
+        self._sent_history_repository = SentHistoryRepository(self._database)
+
         self._quran_cache_ready = False
 
         logger.info("Container initialized.")
@@ -66,6 +74,14 @@ class Container:
     @property
     def loader(self) -> QuranCacheLoader:
         return self._loader
+
+    @property
+    def chat_repository(self) -> ChatRepository:
+        return self._chat_repository
+
+    @property
+    def sent_history_repository(self) -> SentHistoryRepository:
+        return self._sent_history_repository
 
     @property
     def quran_cache_ready(self) -> bool:

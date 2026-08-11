@@ -15,8 +15,8 @@ Project Charter is available in ['Charters'](https://github.com/natiq-foundation
 ### With Docker (recommended)
 
 ```bash
-git clone https://github.com/your-org/your-repo.git
-cd your-repo
+git clone https://github.com/natiq-foundation/bot
+cd bot
 cp .env.example .env.docker
 # edit .env.docker with your settings
 # if you want admin access, also set ADMIN_USER_IDS to your numeric Telegram user ID

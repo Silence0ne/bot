@@ -1,33 +1,37 @@
 from __future__ import annotations
 
-from typing import Protocol
+import shutil
+from typing import TYPE_CHECKING, Protocol
 
+import psutil
 from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes
 
-from app.api.checker import MessengerFeature
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
 from app.core.config import get_settings
 from app.core.container import Container
 from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
 
+if TYPE_CHECKING:
+    from app.database.models.chat import Chat
+
 
 class SupportsAdminLookup(Protocol):
-    async def is_admin(self, telegram_id: int) -> bool: ...
+    async def get_by_telegram_id(self, telegram_id: int) -> "Chat | None": ...
 
 
-async def _resolve_is_admin(
+async def _resolve_is_superadmin(
     telegram_id: int,
     *,
     configured_admin_ids: set[int],
-    user_repository: SupportsAdminLookup,
+    chat_repository: SupportsAdminLookup,
 ) -> bool:
     """
     A user is an admin if either is true:
 
     - their numeric ID is listed in the `ADMIN_USER_IDS` setting, or
-    - their `users.is_admin` database column is set to true.
+    - their `chats.is_admin` database column is set to true.
 
     The env-based check is tried first since it never requires a
     database round-trip.
@@ -35,10 +39,11 @@ async def _resolve_is_admin(
     if telegram_id in configured_admin_ids:
         return True
 
-    return await user_repository.is_admin(telegram_id)
+    chat = await chat_repository.get_by_telegram_id(telegram_id)
+    return chat is not None and chat.is_admin
 
 
-async def _is_admin(
+async def _is_superadmin(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> bool:
@@ -50,10 +55,27 @@ async def _is_admin(
     settings = get_settings()
     container: Container = context.application.bot_data["container"]
 
-    return await _resolve_is_admin(
+    return await _resolve_is_superadmin(
         user.id,
         configured_admin_ids=settings.admin_user_ids,
-        user_repository=container.user_repository,
+        chat_repository=container.chat_repository,  # <-- Changed here
+    )
+
+
+async def _get_system_stats(context: ContextTypes.DEFAULT_TYPE) -> str:
+    cpu_usage = psutil.cpu_percent(interval=None)
+    ram = psutil.virtual_memory()
+    disk = shutil.disk_usage("/")
+
+    container: Container = context.application.bot_data["container"]
+    user_counts = await container.chat_repository.count_by_type()
+    total_users = sum(user_counts.values())
+
+    return (
+        f"🖥 CPU: {cpu_usage}%\n"
+        f"💾 RAM: {ram.percent}% ({ram.used // 1024**2}MB / {ram.total // 1024**2}MB)\n"
+        f"💽 Disk: {disk.percent}% ({disk.used // 1024**3}GB / {disk.total // 1024**3}GB)\n"
+        f"👥 Total Users: {total_users}"
     )
 
 
@@ -61,25 +83,23 @@ def _build_admin_dashboard(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
     language: str,
+    stats: str,
+    totals: dict[str, int],
 ) -> str:
     settings = get_settings()
     container: Container = context.application.bot_data["container"]
-    feature_checker = context.application.bot_data["feature_checker"]
-    user_id = update.effective_user.id if update.effective_user else None
 
-    callback_query_supported = feature_checker.supports(MessengerFeature.CALLBACK_QUERY)
-    inline_keyboard_supported = feature_checker.supports(
-        MessengerFeature.INLINE_KEYBOARD
-    )
-
+    # Check if `admin_dashboard` message supports new placeholders.
+    # Note: If your locale file `messages.json` (or equivalent) does not
+    # contain the new keys, ensure they are added there as well.
     return get_message("admin_dashboard", language).format(
-        user_id=user_id or "-",
-        platform=settings.PLATFORM,
+        stats=stats,
+        total_ayahs=totals["ayahs"],
+        total_pages=totals["pages"],
+        quran_cache_ready="✅" if container.quran_cache_ready else "❌",
+        bot_id=context.bot.id,
         bot_language=settings.BOT_LANGUAGE,
-        quran_cache_ready="yes" if container.quran_cache_ready else "no",
-        inline_keyboard_supported="yes" if inline_keyboard_supported else "no",
-        callback_query_supported="yes" if callback_query_supported else "no",
-        configured_admin_count=len(settings.admin_user_ids),
+        api_status="✅",
     )
 
 
@@ -124,7 +144,7 @@ async def reload_quran_cache(
         update.effective_user.language_code if update.effective_user else None
     )
 
-    if not await _is_admin(update, context):
+    if not await _is_superadmin(update, context):
         await _reply_admin_denied(update, context)
         return
 
@@ -157,7 +177,7 @@ async def admin_settings_entry(
     if not update.message:
         return
 
-    if not await _is_admin(update, context):
+    if not await _is_superadmin(update, context):
         await _reply_admin_denied(update, context)
         return
 
@@ -165,14 +185,18 @@ async def admin_settings_entry(
         update.effective_user.language_code if update.effective_user else None
     )
 
+    container: Container = context.application.bot_data["container"]
+    stats = await _get_system_stats(context)
+    totals = await container.chat_repository.get_send_totals()
+
     await update.message.reply_text(
-        _build_admin_dashboard(update, context, language),
+        _build_admin_dashboard(update, context, language, stats, totals),
         reply_markup=main_menu_keyboard(language),
     )
 
 
 def get_command_handler() -> CommandHandler:
-    return CommandHandler("admin", admin_settings_entry)
+    return CommandHandler("superadmin", admin_settings_entry)
 
 
 def get_reload_cache_handler() -> CommandHandler:

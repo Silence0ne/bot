@@ -63,9 +63,19 @@ async def start(
         else:
             logger.warning("User repository not available")
 
+        from app.bot.handlers.superadmin import _resolve_is_superadmin
+        from app.core.config import get_settings
+
+        settings = get_settings()
+        is_admin = await _resolve_is_superadmin(
+            telegram_id,
+            configured_admin_ids=settings.admin_user_ids,
+            chat_repository=user_repo,
+        )
+
         await update.message.reply_text(
             get_message("start", language),
-            reply_markup=main_menu_keyboard(language),
+            reply_markup=main_menu_keyboard(language, is_admin=is_admin),
         )
 
     except Exception as exc:

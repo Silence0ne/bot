@@ -8,6 +8,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-quran_bot}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_HOST: postgres
 
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
@@ -55,8 +56,11 @@ services:
       - .env.docker
 
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/quran_bot
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/quran_bot
       REDIS_URL: redis://redis:6379/0
+      POSTGRES_DB: ${POSTGRES_DB:-quran_bot}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_HOST: postgres
 
     depends_on:
       postgres:

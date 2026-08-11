@@ -1,0 +1,17 @@
+{
+  "start": "Rahman ve Rahim olan Allah'ın adıyla\n\nNatiq Kur'an Botuna hoş geldiniz.\n\nBu bot Kur'an içeriğini sunmak ve göstermek için tasarlanmıştır; size çevirileriyle birlikte rastgele ayetler gönderebilir.\n\nAşağıdaki menüden doğrudan Rastgele Ayet seçebilirsiniz. Ayrıca rastgele bir ayet almak için /random ve komut listesini görmek için /help kullanabilirsiniz.",
+  "surah_label": "Sure",
+  "translation_label": "📝",
+  "main_menu_random_button": "Rastgele Ayet",
+  "main_menu_admin_button": "Yönetici Ayarları",
+  "next_ayah_button": "Sonraki Ayet",
+  "random_ayah_error": "Ayet alınamadı.",
+  "next_ayah_error": "Ayet alınamadı",
+  "help": "Natiq Bot Yardım\n\nKullanılabilir komutlar:\n/start - Botu başlat ve ana menüyü göster\n/help - Bu yardım mesajını göster\n/random - Rastgele bir ayet al\n/admin - Yönetici ayarları alanını aç\n\nAna menü düğmeleri:\n- Rastgele Ayet: rastgele bir ayet gönderir\n- Yönetici Ayarları: yönetim ayarları alanını açar (sadece yöneticiler)\n\nSadece yöneticiler için komutlar:\n/reload_cache - Botu yeniden başlatmadan Kur'an önbelleğini yeniden yükle\n\nBir ayet aldıktan sonra, mesajlaşma platformu satır içi düğmeleri destekliyorsa Sonraki Ayet düğmesi de görünür.",
+  "admin_dashboard": "Bot Yönetici Paneli\n\nKullanıcı kimliğiniz: {user_id}\nYapılandırılmış yönetici sayısı: {configured_admin_count}\nPlatform: {platform}\nVarsayılan bot dili: {bot_language}\nKur'an önbelleği hazır: {quran_cache_ready}\nSatır içi klavye desteği: {inline_keyboard_supported}\nCallback query desteği: {callback_query_supported}\n\nKullanılabilir yönetici komutu:\n/reload_cache - Botu yeniden başlatmadan Kur'an önbelleğini yeniden yükle",
+  "admin_access_denied": "Yönetici alanına erişim izniniz yok. Bu bölümü etkinleştirmek için sayısal kullanıcı kimliğiniz `ADMIN_USER_IDS` ayarına eklenmeli veya veritabanındaki kullanıcı kaydınızda `is_admin` değeri true olmalıdır.",
+  "admin_cache_reloading": "Kur'an önbelleği yeniden yükleniyor... lütfen bekleyin.",
+  "admin_cache_reload_success": "Kur'an önbelleği başarıyla yeniden yüklendi.",
+  "admin_cache_reload_failed": "Kur'an önbelleği yeniden yüklenemedi. Lütfen bot günlüklerini kontrol edin.",
+  "rate_limited": "Kısa sürede çok fazla istek gönderdiniz. Lütfen biraz bekleyip tekrar deneyin."
+}

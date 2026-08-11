@@ -3,7 +3,7 @@ set -e
 
 echo "Waiting for PostgreSQL..."
 
-until pg_isready -h postgres -U postgres -d quran_bot; do
+until pg_isready -h "$POSTGRES_HOST" -p 5432 -U "$POSTGRES_USER" -d "$POSTGRES_DB"; do
     sleep 2
 done
 
@@ -21,11 +21,13 @@ if [ -n "$MIGRATION_FILE" ] && [ -f "$MIGRATION_FILE" ]; then
         rm "$MIGRATION_FILE"
     else
         echo "New migration created: $MIGRATION_FILE"
+        echo "Applying migrations..."
+        alembic upgrade head
     fi
+else
+    echo "Applying migrations..."
+    alembic upgrade head
 fi
-
-echo "Applying migrations..."
-alembic upgrade head
 
 echo "Starting Quran Bot..."
 exec python -m app

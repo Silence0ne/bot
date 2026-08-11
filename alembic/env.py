@@ -2,25 +2,22 @@ from __future__ import annotations
 
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import create_engine
-
-from app.core.config import get_settings
-from app.database.base import Base
-from app.database.types import UUIDType
 
 # Import every model so SQLAlchemy registers all tables.
 # Keep this import. Without it Alembic sees an empty metadata.
 import app.database.models  # noqa: F401
+from alembic import context
+from app.core.config import get_settings
+from app.database.base import Base
+from app.database.types import UUIDType
 
 config = context.config
+settings = get_settings()
 
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
-
-
-settings = get_settings()
 
 
 def get_sync_database_url() -> str:
@@ -30,27 +27,13 @@ def get_sync_database_url() -> str:
     """
 
     url = settings.DATABASE_URL
-
-    replacements = {
-        "postgresql+asyncpg://": "postgresql+psycopg://",
-        "postgresql://": "postgresql+psycopg://",
-    }
-
-    for old, new in replacements.items():
-        if url.startswith(old):
-            return url.replace(old, new, 1)
+    if "asyncpg" in url:
+        url = url.replace("+asyncpg", "")
 
     return url
 
 
-database_url = get_sync_database_url()
-
-
-config.set_main_option(
-    "sqlalchemy.url",
-    database_url,
-)
-
+config.set_main_option("sqlalchemy.url", get_sync_database_url())
 
 target_metadata = Base.metadata
 
@@ -74,7 +57,7 @@ def run_migrations_offline() -> None:
     """
 
     context.configure(
-        url=database_url,
+        url=config.get_main_option("sqlalchemy.url"),
         target_metadata=target_metadata,
         literal_binds=True,
         compare_type=True,
@@ -96,7 +79,7 @@ def run_migrations_online() -> None:
     """
 
     engine = create_engine(
-        database_url,
+        config.get_main_option("sqlalchemy.url"),
         pool_pre_ping=True,
         future=True,
     )
