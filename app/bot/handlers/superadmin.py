@@ -74,7 +74,7 @@ async def _get_system_stats(context: ContextTypes.DEFAULT_TYPE) -> str:
     return (
         f"🖥 CPU: {cpu_usage}%\n"
         f"💾 RAM: {ram.percent}% ({ram.used // 1024**2}MB / {ram.total // 1024**2}MB)\n"
-        f"💽 Disk: {disk.percent}% ({disk.used // 1024**3}GB / {disk.total // 1024**3}GB)\n"
+        f"💽 Disk: {(disk.used / disk.total) * 100:.1f}% ({disk.used // 1024**3}GB / {disk.total // 1024**3}GB)\n"
         f"👥 Total Users: {total_users}"
     )
 
