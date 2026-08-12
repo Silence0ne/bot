@@ -89,11 +89,17 @@ def _build_admin_dashboard(
     settings = get_settings()
     container: Container = context.application.bot_data["container"]
 
-    # Check if `admin_dashboard` message supports new placeholders.
-    # Note: If your locale file `messages.json` (or equivalent) does not
-    # contain the new keys, ensure they are added there as well.
+    # Extract key env settings
+    env_info = (
+        f"🌐 Platform: {settings.PLATFORM}\n"
+        f"🏷 App Name: {settings.APP_NAME}\n"
+        f"🌍 Language: {settings.BOT_LANGUAGE}\n"
+        f"⏱ API Timeout: {settings.NATIQ_API_TIMEOUT}s"
+    )
+
     return get_message("admin_dashboard", language).format(
         stats=stats,
+        env_info=env_info,
         total_ayahs=totals["ayahs"],
         total_pages=totals["pages"],
         quran_cache_ready="✅" if container.quran_cache_ready else "❌",
