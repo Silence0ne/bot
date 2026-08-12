@@ -33,7 +33,7 @@ class SentHistoryRepository:
             result = await session.execute(stmt)
             return list(result.scalars().all())
 
-    async def upsert_position(
+    async def log_sent(
         self,
         *,
         chat_uuid: uuid.UUID,
@@ -43,23 +43,13 @@ class SentHistoryRepository:
         from app.database.models.sent_history import ReadingMode, SentHistory
 
         mode = ReadingMode(reading_mode)
-
+        history = SentHistory(
+            chat_uuid=chat_uuid,
+            ayah_uuid=ayah_uuid,
+            type=mode,
+        )
         async with self._database.session() as session:
-            stmt = select(SentHistory).where(SentHistory.chat_id == chat_uuid)
-            result = await session.execute(stmt)
-            history = result.scalar_one_or_none()
-
-            if history is None:
-                history = SentHistory(
-                    chat_id=chat_uuid,
-                    ayah_uuid=ayah_uuid,
-                    type=mode,
-                )
-                session.add(history)
-            else:
-                history.ayah_uuid = ayah_uuid
-                history.type = mode
-
+            session.add(history)
             await session.commit()
             await session.refresh(history)
             return history

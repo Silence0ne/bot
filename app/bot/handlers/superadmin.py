@@ -89,11 +89,16 @@ def _build_admin_dashboard(
     settings = get_settings()
     container: Container = context.application.bot_data["container"]
 
+    # Admin list (env)
+    admin_list = ", ".join(map(str, sorted(settings.admin_user_ids)))
+
     # Extract key env settings
     env_info = (
         f"🌐 Platform: {settings.PLATFORM}\n"
         f"🏷 App Name: {settings.APP_NAME}\n"
         f"🌍 Language: {settings.BOT_LANGUAGE}\n"
+        f"🔐 Admins: {admin_list}\n"
+        f"🔑 API Key (Set: {'✅' if settings.NATIQ_API_TOKEN else '❌'})\n"
         f"⏱ API Timeout: {settings.NATIQ_API_TIMEOUT}s"
     )
 
