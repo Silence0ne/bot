@@ -27,15 +27,15 @@ class SentHistory(Base, UUIDMixin, TimestampMixin):
 
     __tablename__ = "sent_history"
 
-    chat_id: Mapped[uuid.UUID] = mapped_column(
+    chat_uuid: Mapped[uuid.UUID] = mapped_column(
         UUIDType(),
         ForeignKey(
             "chats.uuid",
             ondelete="CASCADE",
         ),
-        unique=True,
         index=True,
     )
+    # Removing unique=True to allow multiple entries per user.
 
     type: Mapped[ReadingMode] = mapped_column(
         Enum(ReadingMode, native_enum=False, length=5),
