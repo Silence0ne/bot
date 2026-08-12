@@ -181,18 +181,9 @@ class ChatRepository:
         *,
         sent_pages: bool = False,
     ) -> None:
-        async def count_by_type(self) -> dict[str, int]:
-        from app.database.models.chat import Chat
-
-        async with self._database.session() as session:
-            stmt = select(Chat.chat_type, func.count()).group_by(Chat.chat_type)
-            result = await session.execute(stmt)
-            rows = result.all()
-
-        counts = {"private": 0, "group": 0, "supergroup": 0, "channel": 0}
-        for chat_type, count in rows:
-            counts[str(chat_type)] = int(count)
-        return counts
+        # Note: 'total_ayahs_sent' and 'total_pages_sent' were removed from Chat model.
+        # History is now managed solely via SentHistoryRepository.
+        pass
 
     async def count_by_type(self) -> dict[str, int]:
         from app.database.models.chat import Chat
