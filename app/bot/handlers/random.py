@@ -68,16 +68,15 @@ async def random_ayah(
 
         # Track in database
         if update.effective_user:
-            await container.chat_repository.mark_daily_sent(update.effective_user.id)
-            await container.sent_history_repository.upsert_position(
-                chat_uuid=(
-                    await container.chat_repository.get_by_telegram_id(
-                        update.effective_user.id
-                    )
-                ).uuid,
-                ayah_uuid=ayah.uuid,
-                reading_mode="ayah",
+            chat = await container.chat_repository.get_by_telegram_id(
+                update.effective_user.id
             )
+            if chat:
+                await container.sent_history_repository.log_sent(
+                    chat_uuid=chat.uuid,
+                    ayah_uuid=ayah.uuid,
+                    reading_mode="ayah",
+                )
 
         context.user_data["current_ayah_uuid"] = ayah.uuid
 

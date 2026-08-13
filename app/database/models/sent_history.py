@@ -35,7 +35,7 @@ class SentHistory(Base, UUIDMixin, TimestampMixin):
         ),
         index=True,
     )
-    # Removing unique=True to allow multiple entries per user.
+    # The unique=True constraint has been removed.
 
     type: Mapped[ReadingMode] = mapped_column(
         Enum(ReadingMode, native_enum=False, length=5),
