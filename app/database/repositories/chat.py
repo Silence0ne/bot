@@ -175,16 +175,6 @@ class ChatRepository:
         today = self._local_today(chat.timezone)
         return chat.last_daily_sent_date != today
 
-    async def mark_daily_sent(
-        self,
-        telegram_id: int,
-        *,
-        sent_pages: bool = False,
-    ) -> None:
-        # Note: 'total_ayahs_sent' and 'total_pages_sent' were removed from Chat model.
-        # History is now managed solely via SentHistoryRepository.
-        pass
-
     async def count_by_type(self) -> dict[str, int]:
         from app.database.models.chat import Chat
 

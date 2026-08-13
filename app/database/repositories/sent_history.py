@@ -43,13 +43,41 @@ class SentHistoryRepository:
         from app.database.models.sent_history import ReadingMode, SentHistory
 
         mode = ReadingMode(reading_mode)
-        history = SentHistory(
-            chat_uuid=chat_uuid,
-            ayah_uuid=ayah_uuid,
-            type=mode,
-        )
+
         async with self._database.session() as session:
-            session.add(history)
+            # We can use upsert_position as the method name if the code expects it,
+            # or update the handler. I'll alias it to maintain compatibility.
+            stmt = select(SentHistory).where(SentHistory.chat_uuid == chat_uuid)
+            result = await session.execute(stmt)
+            history = result.scalar_one_or_none()
+
+            if history is None:
+                history = SentHistory(
+                    chat_uuid=chat_uuid,
+                    ayah_uuid=ayah_uuid,
+                    type=mode,
+                )
+                session.add(history)
+            else:
+                history.ayah_uuid = ayah_uuid
+                history.type = mode
+
             await session.commit()
             await session.refresh(history)
             return history
+
+    # Keeping the old name as an alias for the handler
+    async def upsert_position(self, *args, **kwargs) -> "SentHistory":
+        return await self.log_sent(*args, **kwargs)
+
+    # Added missing method name
+    async def upsert_position(
+        self,
+        *,
+        chat_uuid: uuid.UUID,
+        ayah_uuid: uuid.UUID,
+        reading_mode: str = "ayah",
+    ) -> "SentHistory":
+        return await self.log_sent(
+            chat_uuid=chat_uuid, ayah_uuid=ayah_uuid, reading_mode=reading_mode
+        )

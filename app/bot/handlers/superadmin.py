@@ -98,7 +98,7 @@ def _build_admin_dashboard(
         f"🏷 App Name: {settings.APP_NAME}\n"
         f"🌍 Language: {settings.BOT_LANGUAGE}\n"
         f"🔐 Admins: {admin_list}\n"
-        f"🔑 API Key (Set: {'✅' if settings.NATIQ_API_TOKEN else '❌'})\n"
+        f"🔑 Bot API Key (Set: {'✅' if settings.BOT_TOKEN else '❌'})\n"
         f"⏱ API Timeout: {settings.NATIQ_API_TIMEOUT}s"
     )
 
