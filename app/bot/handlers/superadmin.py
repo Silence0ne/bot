@@ -79,7 +79,7 @@ async def _get_system_stats(context: ContextTypes.DEFAULT_TYPE) -> str:
     )
 
 
-    def _build_admin_dashboard(
+def _build_admin_dashboard(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
     language: str,
@@ -103,7 +103,7 @@ async def _get_system_stats(context: ContextTypes.DEFAULT_TYPE) -> str:
     bot_api_info = (
         f"📍 Base URL: {settings.BOT_API}\n"
         f"🌐 Natiq API: {settings.NATIQ_API_URL}\n"
-        f"🗝 Token masked: {settings.BOT_TOKEN[:4]}...{settings.BOT_TOKEN[-4:] if len(settings.BOT_TOKEN)>8 else '***'}"
+        f"🗝 Token masked: {settings.BOT_TOKEN[:4]}...{settings.BOT_TOKEN[-4:] if len(settings.BOT_TOKEN) > 8 else '***'}"
     )
 
     return get_message("admin_dashboard", language).format(
