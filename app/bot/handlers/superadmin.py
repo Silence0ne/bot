@@ -79,7 +79,7 @@ async def _get_system_stats(context: ContextTypes.DEFAULT_TYPE) -> str:
     )
 
 
-def _build_admin_dashboard(
+    def _build_admin_dashboard(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
     language: str,
@@ -92,24 +92,28 @@ def _build_admin_dashboard(
     # Admin list (env)
     admin_list = ", ".join(map(str, sorted(settings.admin_user_ids)))
 
-    # Extract key env settings
+    # Categorized Admin Dashboard
     env_info = (
         f"🌐 Platform: {settings.PLATFORM}\n"
         f"🏷 App Name: {settings.APP_NAME}\n"
         f"🌍 Language: {settings.BOT_LANGUAGE}\n"
         f"🔐 Admins: {admin_list}\n"
-        f"🔑 Bot API Key (Set: {'✅' if settings.BOT_TOKEN else '❌'})\n"
-        f"⏱ API Timeout: {settings.NATIQ_API_TIMEOUT}s"
+    )
+
+    bot_api_info = (
+        f"📍 Base URL: {settings.BOT_API}\n"
+        f"🌐 Natiq API: {settings.NATIQ_API_URL}\n"
+        f"🗝 Token masked: {settings.BOT_TOKEN[:4]}...{settings.BOT_TOKEN[-4:] if len(settings.BOT_TOKEN)>8 else '***'}"
     )
 
     return get_message("admin_dashboard", language).format(
         stats=stats,
         env_info=env_info,
+        bot_api_info=bot_api_info,
         total_ayahs=totals["ayahs"],
         total_pages=totals["pages"],
         quran_cache_ready="✅" if container.quran_cache_ready else "❌",
         bot_id=context.bot.id,
-        bot_language=settings.BOT_LANGUAGE,
         api_status="✅",
     )
 
