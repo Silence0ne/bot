@@ -95,9 +95,10 @@ def _build_admin_dashboard(
     # Categorized Admin Dashboard
     env_info = (
         f"🌐 Platform: {settings.PLATFORM}\n"
-        f"🏷 App Name: {settings.APP_NAME}\n"
         f"🌍 Language: {settings.BOT_LANGUAGE}\n"
         f"🔐 Admins: {admin_list}\n"
+        f"🔑 API Key (Set: {'✅' if settings.BOT_TOKEN else '❌'})\n"
+        f"⏱ API Timeout: {settings.NATIQ_API_TIMEOUT}s"
     )
 
     bot_api_info = (

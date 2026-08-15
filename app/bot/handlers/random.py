@@ -78,14 +78,16 @@ async def random_ayah(
                     reading_mode="ayah",
                 )
 
-        context.user_data["current_ayah_uuid"] = ayah.uuid
+        # Pass the correct language
+        language = detect_language(
+            update.effective_user.language_code if update.effective_user else None
+        )
 
         reply_markup = None
-
         if context.application.bot_data["feature_checker"].supports(
             MessengerFeature.INLINE_KEYBOARD
         ):
-            reply_markup = random_ayah_keyboard(ayah.uuid, "")
+            reply_markup = random_ayah_keyboard(ayah.uuid, language)
 
         await update.message.reply_text(
             text=format_ayah(ayah),
