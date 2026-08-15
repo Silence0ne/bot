@@ -9,7 +9,7 @@ from telegram.ext import CallbackQueryHandler, ContextTypes
 from app.api.checker import MessengerFeature
 from app.bot.handlers.random import format_ayah
 from app.core.container import Container
-from app.i18n import get_message
+from app.i18n import detect_language, get_message
 from app.schemas.ayah import Ayah
 from app.ui.keyboards.random import random_ayah_keyboard
 
