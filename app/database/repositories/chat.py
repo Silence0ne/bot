@@ -66,7 +66,6 @@ class ChatRepository:
                 language=language,
                 daily_ayah=enable_daily_ayah,
                 daily_time="03:15",
-                timezone="Asia/Riyadh",
                 content_mode=ContentMode.RANDOM_AYAH.value,
             )
             session.add(chat)
@@ -104,7 +103,6 @@ class ChatRepository:
                     language=language or "fa",
                     daily_ayah=chat_type == ChatType.PRIVATE.value,
                     daily_time="03:15",
-                    timezone="Asia/Riyadh",
                     content_mode=ContentMode.RANDOM_AYAH.value,
                 )
                 session.add(chat)
@@ -177,27 +175,6 @@ class ChatRepository:
         today = self._local_today(chat.timezone)
         return chat.last_daily_sent_date != today
 
-    async def mark_daily_sent(
-        self,
-        telegram_id: int,
-        *,
-        sent_pages: bool = False,
-    ) -> None:
-        async with self._database.session() as session:
-            chat = await self._get_by_telegram_id(session, telegram_id)
-            if chat is None:
-                return
-
-            chat.last_daily_sent_date = self._local_today(chat.timezone)
-            if sent_pages:
-                chat.total_pages_sent += 1
-            else:
-                chat.total_ayahs_sent += 1
-
-            session.add(chat)
-            await session.commit()
-            await session.refresh(chat)
-
     async def count_by_type(self) -> dict[str, int]:
         from app.database.models.chat import Chat
 
@@ -212,14 +189,18 @@ class ChatRepository:
         return counts
 
     async def get_send_totals(self) -> dict[str, int]:
-        from app.database.models.chat import Chat
+        from app.database.models.sent_history import ReadingMode, SentHistory
 
         async with self._database.session() as session:
             ayah_total = await session.scalar(
-                select(func.coalesce(func.sum(Chat.total_ayahs_sent), 0))
+                select(func.count())
+                .select_from(SentHistory)
+                .where(SentHistory.type == ReadingMode.AYAH)
             )
             page_total = await session.scalar(
-                select(func.coalesce(func.sum(Chat.total_pages_sent), 0))
+                select(func.count())
+                .select_from(SentHistory)
+                .where(SentHistory.type == ReadingMode.PAGE)
             )
 
         return {

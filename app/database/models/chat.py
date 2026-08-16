@@ -28,18 +28,15 @@ class Chat(Base, UUIDMixin, TimestampMixin):
 
     # Preferences
     language: Mapped[str] = mapped_column(String(10), default="fa")
-    is_superadmin: Mapped[bool] = mapped_column(Boolean, default=False)
     content_mode: Mapped[str] = mapped_column(String(32), default="random_ayah")
 
     # Daily ayah settings
     daily_ayah: Mapped[bool] = mapped_column(Boolean, default=False)
     daily_time: Mapped[str] = mapped_column(String(5), default="03:15")
-    timezone: Mapped[str] = mapped_column(String(64), default="Asia/Riyadh")
+    timezone: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     # Delivery tracking
     last_daily_sent_date: Mapped[date | None] = mapped_column(Date, nullable=True)
-    total_ayahs_sent: Mapped[int] = mapped_column(BigInteger, default=0)
-    total_pages_sent: Mapped[int] = mapped_column(BigInteger, default=0)
 
     # Relationships
     sent_history: Mapped["SentHistory | None"] = relationship(
@@ -58,7 +55,3 @@ class Chat(Base, UUIDMixin, TimestampMixin):
     def daily_ayah_minute(self) -> int:
         _hour, minute = self.daily_time.split(":", 1)
         return int(minute)
-
-    @property
-    def total_sent(self) -> int:
-        return self.total_ayahs_sent + self.total_pages_sent

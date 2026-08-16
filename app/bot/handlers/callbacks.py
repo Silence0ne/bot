@@ -9,7 +9,7 @@ from telegram.ext import CallbackQueryHandler, ContextTypes
 from app.api.checker import MessengerFeature
 from app.bot.handlers.random import format_ayah
 from app.core.container import Container
-from app.i18n import get_message
+from app.i18n import detect_language, get_message
 from app.schemas.ayah import Ayah
 from app.ui.keyboards.random import random_ayah_keyboard
 
@@ -35,16 +35,21 @@ async def _reply_with_ayah(
 
     reply_markup = None
 
+    # Build and pass language to keyboard builder
+    language = detect_language(
+        update.effective_user.language_code if update.effective_user else None
+    )
+
     if context.application.bot_data["feature_checker"].supports(
         MessengerFeature.INLINE_KEYBOARD
     ):
-        reply_markup = random_ayah_keyboard(ayah.uuid, "")
+        reply_markup = random_ayah_keyboard(ayah.uuid, language)
 
+    # Send as a new message, not a reply
     await message.reply_text(
         text=format_ayah(ayah),
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=reply_markup,
-        reply_to_message_id=message.message_id,
     )
 
 
@@ -61,7 +66,7 @@ async def _handle_next_ayah(
 
     try:
         container: Container = context.application.bot_data["container"]
-        current_uuid = context.user_data.get("current_ayah_uuid")
+        # current_uuid is now extracted directly from query data to ensure uniqueness
 
         if not container.quran_cache_ready:
             await query.answer(
@@ -71,8 +76,20 @@ async def _handle_next_ayah(
             return
 
         ayah: Ayah = await container.provider.next_ayah(
-            current_uuid=current_uuid,
+            current_uuid=query.data.split(":")[1],
         )
+
+        # Track in database
+        if update.effective_user:
+            chat = await container.chat_repository.get_by_telegram_id(
+                update.effective_user.id
+            )
+            if chat:
+                await container.sent_history_repository.log_sent(
+                    chat_uuid=chat.uuid,
+                    ayah_uuid=ayah.uuid,
+                    reading_mode="ayah",
+                )
 
         await _reply_with_ayah(
             update,
@@ -110,6 +127,18 @@ async def random_ayah_callback(
             return
 
         ayah: Ayah = await container.provider.random_ayah()
+
+        # Track in database
+        if update.effective_user:
+            chat = await container.chat_repository.get_by_telegram_id(
+                update.effective_user.id
+            )
+            if chat:
+                await container.sent_history_repository.log_sent(
+                    chat_uuid=chat.uuid,
+                    ayah_uuid=ayah.uuid,
+                    reading_mode="ayah",
+                )
 
         await _reply_with_ayah(
             update,

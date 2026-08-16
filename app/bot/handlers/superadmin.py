@@ -74,7 +74,7 @@ async def _get_system_stats(context: ContextTypes.DEFAULT_TYPE) -> str:
     return (
         f"🖥 CPU: {cpu_usage}%\n"
         f"💾 RAM: {ram.percent}% ({ram.used // 1024**2}MB / {ram.total // 1024**2}MB)\n"
-        f"💽 Disk: {disk.percent}% ({disk.used // 1024**3}GB / {disk.total // 1024**3}GB)\n"
+        f"💽 Disk: {(disk.used / disk.total) * 100:.1f}% ({disk.used // 1024**3}GB / {disk.total // 1024**3}GB)\n"
         f"👥 Total Users: {total_users}"
     )
 
@@ -89,16 +89,32 @@ def _build_admin_dashboard(
     settings = get_settings()
     container: Container = context.application.bot_data["container"]
 
-    # Check if `admin_dashboard` message supports new placeholders.
-    # Note: If your locale file `messages.json` (or equivalent) does not
-    # contain the new keys, ensure they are added there as well.
+    # Admin list (env)
+    admin_list = ", ".join(map(str, sorted(settings.admin_user_ids)))
+
+    # Categorized Admin Dashboard
+    env_info = (
+        f"🌐 Platform: {settings.PLATFORM}\n"
+        f"🌍 Language: {settings.BOT_LANGUAGE}\n"
+        f"🔐 Admins: {admin_list}\n"
+        f"🔑 API Key (Set: {'✅' if settings.BOT_TOKEN else '❌'})\n"
+        f"⏱ API Timeout: {settings.NATIQ_API_TIMEOUT}s"
+    )
+
+    bot_api_info = (
+        f"📍 Base URL: {settings.BOT_API}\n"
+        f"🌐 Natiq API: {settings.NATIQ_API_URL}\n"
+        f"🗝 Token masked: {settings.BOT_TOKEN[:4]}...{settings.BOT_TOKEN[-4:] if len(settings.BOT_TOKEN) > 8 else '***'}"
+    )
+
     return get_message("admin_dashboard", language).format(
         stats=stats,
+        env_info=env_info,
+        bot_api_info=bot_api_info,
         total_ayahs=totals["ayahs"],
         total_pages=totals["pages"],
         quran_cache_ready="✅" if container.quran_cache_ready else "❌",
         bot_id=context.bot.id,
-        bot_language=settings.BOT_LANGUAGE,
         api_status="✅",
     )
 

@@ -9,7 +9,7 @@ from telegram.ext import CommandHandler, ContextTypes
 from app.api.checker import MessengerFeature
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
 from app.core.container import Container
-from app.i18n import get_message
+from app.i18n import detect_language, get_message
 from app.schemas.ayah import Ayah
 from app.ui.keyboards import random_ayah_keyboard
 
@@ -68,25 +68,26 @@ async def random_ayah(
 
         # Track in database
         if update.effective_user:
-            await container.chat_repository.mark_daily_sent(update.effective_user.id)
-            await container.sent_history_repository.upsert_position(
-                chat_uuid=(
-                    await container.chat_repository.get_by_telegram_id(
-                        update.effective_user.id
-                    )
-                ).uuid,
-                ayah_uuid=ayah.uuid,
-                reading_mode="ayah",
+            chat = await container.chat_repository.get_by_telegram_id(
+                update.effective_user.id
             )
+            if chat:
+                await container.sent_history_repository.log_sent(
+                    chat_uuid=chat.uuid,
+                    ayah_uuid=ayah.uuid,
+                    reading_mode="ayah",
+                )
 
-        context.user_data["current_ayah_uuid"] = ayah.uuid
+        # Pass the correct language
+        language = detect_language(
+            update.effective_user.language_code if update.effective_user else None
+        )
 
         reply_markup = None
-
         if context.application.bot_data["feature_checker"].supports(
             MessengerFeature.INLINE_KEYBOARD
         ):
-            reply_markup = random_ayah_keyboard(ayah.uuid, "")
+            reply_markup = random_ayah_keyboard(ayah.uuid, language)
 
         await update.message.reply_text(
             text=format_ayah(ayah),

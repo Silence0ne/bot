@@ -26,14 +26,16 @@ class SentHistoryRepository:
             return int(result.scalar() or 0)
 
     async def get_all_history(self) -> list["SentHistory"]:
+        from sqlalchemy import desc
+
         from app.database.models.sent_history import SentHistory
 
         async with self._database.session() as session:
-            stmt = select(SentHistory)
+            stmt = select(SentHistory).order_by(desc(SentHistory.created_at))
             result = await session.execute(stmt)
             return list(result.scalars().all())
 
-    async def upsert_position(
+    async def log_sent(
         self,
         *,
         chat_uuid: uuid.UUID,
@@ -43,23 +45,25 @@ class SentHistoryRepository:
         from app.database.models.sent_history import ReadingMode, SentHistory
 
         mode = ReadingMode(reading_mode)
-
+        history = SentHistory(
+            chat_uuid=chat_uuid,
+            ayah_uuid=ayah_uuid,
+            type=mode,
+        )
         async with self._database.session() as session:
-            stmt = select(SentHistory).where(SentHistory.chat_id == chat_uuid)
-            result = await session.execute(stmt)
-            history = result.scalar_one_or_none()
-
-            if history is None:
-                history = SentHistory(
-                    chat_id=chat_uuid,
-                    ayah_uuid=ayah_uuid,
-                    type=mode,
-                )
-                session.add(history)
-            else:
-                history.ayah_uuid = ayah_uuid
-                history.type = mode
-
+            session.add(history)
             await session.commit()
             await session.refresh(history)
             return history
+
+    # Added missing method name
+    async def upsert_position(
+        self,
+        *,
+        chat_uuid: uuid.UUID,
+        ayah_uuid: uuid.UUID,
+        reading_mode: str = "ayah",
+    ) -> "SentHistory":
+        return await self.log_sent(
+            chat_uuid=chat_uuid, ayah_uuid=ayah_uuid, reading_mode=reading_mode
+        )
