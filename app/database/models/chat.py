@@ -20,12 +20,6 @@ class Chat(Base, UUIDMixin, TimestampMixin):
     chat_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
     chat_type: Mapped[str] = mapped_column(String(32))
 
-    # Chat / user info
-    title: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    first_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    last_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    username: Mapped[str | None] = mapped_column(String(255), nullable=True)
-
     # Preferences
     language: Mapped[str] = mapped_column(String(10), default="fa")
     content_mode: Mapped[str] = mapped_column(String(32), default="random_ayah")
