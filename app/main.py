@@ -71,6 +71,9 @@ async def main() -> None:
     try:
         await container.startup()
 
+        # Load cache in the background so it doesn't block startup
+        asyncio.create_task(container.load_cache())
+
         logger.info("All services initialized.")
 
         if settings.BOT_API:

@@ -33,10 +33,6 @@ async def start(
         return
 
     telegram_id = update.effective_user.id
-    first_name = update.effective_user.first_name or "User"
-    username = update.effective_user.username
-    last_name = update.effective_user.last_name
-
     language = detect_language(update.effective_user.language_code)
 
     try:
@@ -45,21 +41,12 @@ async def start(
 
         if user_repo:
             # Get or create user in database
-            user = await user_repo.get_or_create(
+            await user_repo.get_or_create(
                 telegram_id=telegram_id,
-                first_name=first_name,
-                username=username,
-                last_name=last_name,
                 language=language,
             )
 
-            logger.info(
-                "User started: telegram_id=%s, name=%s, daily_ayah_time=%02d:%02d",
-                telegram_id,
-                first_name,
-                user.daily_ayah_hour,
-                user.daily_ayah_minute,
-            )
+            logger.info("User started: telegram_id=%s", telegram_id)
         else:
             logger.warning("User repository not available")
 

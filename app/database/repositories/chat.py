@@ -34,10 +34,6 @@ class ChatRepository:
         *,
         telegram_id: int,
         chat_type: str = ChatType.PRIVATE.value,
-        first_name: str | None = None,
-        last_name: str | None = None,
-        username: str | None = None,
-        title: str | None = None,
         language: str = "fa",
         enable_daily_ayah: bool = True,
     ) -> "Chat":
@@ -47,10 +43,6 @@ class ChatRepository:
             chat = await self._get_by_telegram_id(session, telegram_id)
 
             if chat is not None:
-                chat.first_name = first_name or chat.first_name
-                chat.last_name = last_name or chat.last_name
-                chat.username = username or chat.username
-                chat.title = title or chat.title
                 chat.language = language or chat.language
                 await session.commit()
                 await session.refresh(chat)
@@ -59,10 +51,6 @@ class ChatRepository:
             chat = Chat(
                 chat_id=telegram_id,
                 chat_type=chat_type,
-                first_name=first_name,
-                last_name=last_name,
-                username=username,
-                title=title,
                 language=language,
                 daily_ayah=enable_daily_ayah,
                 daily_time="03:15",
@@ -71,9 +59,7 @@ class ChatRepository:
             session.add(chat)
             await session.commit()
             await session.refresh(chat)
-            logger.info(
-                "Created chat record: chat_id=%s type=%s", telegram_id, chat_type
-            )
+            logger.info("Created chat record: chat_id=%s", telegram_id)
             return chat
 
     async def upsert_from_update(
@@ -81,10 +67,6 @@ class ChatRepository:
         *,
         telegram_id: int,
         chat_type: str,
-        first_name: str | None = None,
-        last_name: str | None = None,
-        username: str | None = None,
-        title: str | None = None,
         language: str | None = None,
     ) -> "Chat":
         from app.database.models.chat import Chat
@@ -96,10 +78,6 @@ class ChatRepository:
                 chat = Chat(
                     chat_id=telegram_id,
                     chat_type=chat_type,
-                    first_name=first_name,
-                    last_name=last_name,
-                    username=username,
-                    title=title,
                     language=language or "fa",
                     daily_ayah=chat_type == ChatType.PRIVATE.value,
                     daily_time="03:15",
@@ -108,14 +86,6 @@ class ChatRepository:
                 session.add(chat)
             else:
                 chat.chat_type = chat_type
-                if first_name is not None:
-                    chat.first_name = first_name
-                if last_name is not None:
-                    chat.last_name = last_name
-                if username is not None:
-                    chat.username = username
-                if title is not None:
-                    chat.title = title
                 if language is not None:
                     chat.language = language
 
