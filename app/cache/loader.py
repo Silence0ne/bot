@@ -32,9 +32,11 @@ class QuranCacheLoader:
     ) -> None:
         self._provider = provider
         self._cache = cache
+        self.loading = False
 
     async def load(self) -> bool:
         logger.info("Loading Quran cache...")
+        self.loading = True
 
         try:
             await self._load_ayahs()
@@ -43,9 +45,11 @@ class QuranCacheLoader:
             await self._load_surahs()
         except (httpx.HTTPError, RuntimeError) as exc:
             logger.exception("Quran cache loading failed: %s", exc)
+            self.loading = False
             return False
 
         logger.info("Quran cache loaded successfully.")
+        self.loading = False
         return True
 
     async def _load_ayahs(self) -> None:

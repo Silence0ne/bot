@@ -97,16 +97,18 @@ class Container:
         if hasattr(self._redis, "connect"):
             await self._redis.connect()
 
-        self._quran_cache_ready = await self._loader.load()
-
-        if not self._quran_cache_ready:
-            logger.warning(
-                "Quran cache is unavailable. Bot will start with Quran features degraded."
-            )
-
         configure_rate_limiter(self._redis)
+        logger.info("Container startup completed (databases connected).")
 
-        logger.info("Container startup completed.")
+    async def load_cache(self) -> None:
+        """
+        Load Quran cache after startup.
+        """
+        self._quran_cache_ready = await self._loader.load()
+        if not self._quran_cache_ready:
+            logger.warning("Quran cache failed to load.")
+        else:
+            logger.info("Quran cache loaded successfully.")
 
     async def reload_quran_cache(self) -> bool:
         """

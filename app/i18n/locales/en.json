@@ -7,7 +7,7 @@
   "next_ayah_button": "Next Ayah",
   "random_ayah_error": "Failed to fetch the ayah.",
   "next_ayah_error": "Failed to fetch the ayah",
-  "help": "Natiq Bot Help\n\nAvailable commands:\n/start - Start the bot and show the main menu\n/help - Show this help message\n/random - Receive a random ayah\n/admin - Open the admin settings area\n\nMain menu buttons:\n- Random Ayah: send a random ayah\n- Admin Settings: open the administrative settings area (admins only)\n\nAdmin-only commands:\n/reload_cache - Reload the Quran cache without restarting the bot\n\nAfter receiving an ayah, the Next Ayah button will also appear when the messaging platform supports inline buttons.",
+  "help": "Commands:\n/start - Initialize bot\n/random - Get random ayah\n/superadmin - Admin dashboard & system status\n/reload_cache - Refresh Quran data\n\nNote: /superadmin is restricted to authorized admins.",
   "admin_dashboard": "🛠 *Bot Admin Dashboard*\n\n{stats}\n\n⚙️ *Environment Settings*\n{env_info}\n\n📡 *Bot & API Info*\n{bot_api_info}\n\n📊 *Sent Statistics*\nTotal Ayahs: {total_ayahs}\nTotal Pages: {total_pages}\n\n🤖 *Cache Status*: {quran_cache_ready}\nBot ID: {bot_id}\nAPI Status: {api_status}\n\nAdmin-only commands:\n/reload_cache - Reload the Quran cache",
   "admin_access_denied": "You do not have access to the admin area. To enable this section, your numeric user ID must be included in the `ADMIN_USER_IDS` setting, or your database user record must have `is_admin` set to true.",
   "admin_cache_reloading": "Reloading Quran cache... please wait.",

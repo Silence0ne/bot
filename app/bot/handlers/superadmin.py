@@ -107,14 +107,21 @@ def _build_admin_dashboard(
         f"🗝 Token masked: {settings.BOT_TOKEN[:4]}...{settings.BOT_TOKEN[-4:] if len(settings.BOT_TOKEN) > 8 else '***'}"
     )
 
+    # Helper to get cache icon
+    def _get_cache_icon() -> str:
+        if container.loader.loading:
+            return "🔄"
+        return "✅" if container.quran_cache_ready else "❌"
+
     return get_message("admin_dashboard", language).format(
         stats=stats,
         env_info=env_info,
         bot_api_info=bot_api_info,
         total_ayahs=totals["ayahs"],
         total_pages=totals["pages"],
-        quran_cache_ready="✅" if container.quran_cache_ready else "❌",
+        quran_cache_ready=_get_cache_icon(),
         bot_id=context.bot.id,
+        bot_language=settings.BOT_LANGUAGE,
         api_status="✅",
     )
 
