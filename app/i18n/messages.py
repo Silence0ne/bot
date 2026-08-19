@@ -24,6 +24,9 @@ LANGUAGE_ALIASES: dict[str, SupportedLanguage] = {
     "tr": "tr",
     "tr-tr": "tr",
     "turkish": "tr",
+    "az": "az",
+    "az-az": "az",
+    "azerbaijani": "az",
 }
 
 # Load translations from JSON files dynamically
