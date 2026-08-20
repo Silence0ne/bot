@@ -98,7 +98,7 @@ async def send_daily_ayah_job(context) -> None:
             except Exception as exc:
                 logger.exception(
                     "Failed to send daily ayah: telegram_id=%s, error=%s",
-                    user.telegram_id,
+                    user.chat_id,
                     exc,
                 )
                 continue

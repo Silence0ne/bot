@@ -10,7 +10,6 @@ from zoneinfo import ZoneInfo
 
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
 from app.core.config import get_settings
-from app.core.container import Container
 from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
 
@@ -71,7 +70,7 @@ async def timezone_settings(
         
         if not chat:
             await update.message.reply_text(
-                "Please start the bot first with /start",
+                get_message("start", language),  # Use the start message to encourage them to start
                 reply_markup=main_menu_keyboard(language),
             )
             return
@@ -116,15 +115,9 @@ async def timezone_settings(
         current_tz = chat.timezone or get_settings().DAILY_AYAH_DEFAULT_TIMEZONE
         current_time_str = chat.daily_time or get_settings().DAILY_AYAH_DEFAULT_TIME
         
-        try:
-            current_tz_obj = ZoneInfo(current_tz)
-            current_local_time = datetime.now(current_tz_obj).strftime("%H:%M")
-        except:
-            current_local_time = current_time_str
-
         message = get_message("timezone_current", language).format(
             timezone=current_tz,
-            time=current_local_time
+            time=current_time_str
         )
         
         message += f"\n\n{get_message('timezone_prompt', language)}"

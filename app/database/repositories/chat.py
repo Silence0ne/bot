@@ -153,11 +153,11 @@ class ChatRepository:
         return chat.last_daily_sent_date != today
 
     async def mark_daily_ayah_sent(self, telegram_id: int) -> None:
-        chat = await self.get_by_telegram_id(telegram_id)
-        if chat is None:
-            return
-
         async with self._database.session() as session:
+            chat = await self._get_by_telegram_id(session, telegram_id)
+            if chat is None:
+                return
+
             chat.last_daily_sent_date = self._local_today(chat.timezone)
             await session.commit()
             await session.refresh(chat)

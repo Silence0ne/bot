@@ -10,9 +10,11 @@ from telegram.ext import CommandHandler, ContextTypes
 
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
 from app.core.config import get_settings
-from app.core.container import Container
 from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
+
+if TYPE_CHECKING:
+    from app.core.container import Container
 
 if TYPE_CHECKING:
     from app.database.models.chat import Chat
@@ -54,12 +56,15 @@ async def _is_superadmin(
         return False
 
     settings = get_settings()
-    container: Container = context.application.bot_data["container"]
+    container = context.application.bot_data.get("container")
+    
+    if not container:
+        return False
 
     return await _resolve_is_superadmin(
         user.id,
         configured_admin_ids=settings.admin_user_ids,
-        chat_repository=container.chat_repository,  # <-- Changed here
+        chat_repository=container.chat_repository,
     )
 
 
@@ -68,9 +73,12 @@ async def _get_system_stats(context: ContextTypes.DEFAULT_TYPE) -> str:
     ram = psutil.virtual_memory()
     disk = shutil.disk_usage("/")
 
-    container: Container = context.application.bot_data["container"]
-    user_counts = await container.chat_repository.count_by_type()
-    total_users = sum(user_counts.values())
+    container = context.application.bot_data.get("container")
+    if container:
+        user_counts = await container.chat_repository.count_by_type()
+        total_users = sum(user_counts.values())
+    else:
+        total_users = 0
 
     return (
         f"🖥 CPU: {cpu_usage}%\n"
@@ -88,7 +96,7 @@ def _build_admin_dashboard(
     totals: dict[str, int],
 ) -> str:
     settings = get_settings()
-    container: Container = context.application.bot_data["container"]
+    container = context.application.bot_data.get("container")
 
     # Admin list (env)
     admin_list = ", ".join(map(str, sorted(settings.admin_user_ids)))
@@ -110,9 +118,9 @@ def _build_admin_dashboard(
 
     # Helper to get cache icon
     def _get_cache_icon() -> str:
-        if container.loader.loading:
+        if container and container.loader.loading:
             return "🔄"
-        return "✅" if container.quran_cache_ready else "❌"
+        return "✅" if container and container.quran_cache_ready else "❌"
 
     return get_message("admin_dashboard", language).format(
         stats=stats,
@@ -177,7 +185,13 @@ async def reload_quran_cache(
         await _reply_admin_denied(update, context)
         return
 
-    container: Container = context.application.bot_data["container"]
+    container = context.application.bot_data.get("container")
+    if not container:
+        await update.message.reply_text(
+            "Service temporarily unavailable. Please try again.",
+            reply_markup=main_menu_keyboard(language),
+        )
+        return
 
     await update.message.reply_text(get_message("admin_cache_reloading", language))
 
@@ -214,7 +228,14 @@ async def admin_settings_entry(
         update.effective_user.language_code if update.effective_user else None
     )
 
-    container: Container = context.application.bot_data["container"]
+    container = context.application.bot_data.get("container")
+    if not container:
+        await update.message.reply_text(
+            "Service temporarily unavailable. Please try again.",
+            reply_markup=main_menu_keyboard(language),
+        )
+        return
+
     stats = await _get_system_stats(context)
     totals = await container.chat_repository.get_send_totals()
 

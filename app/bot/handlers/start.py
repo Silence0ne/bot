@@ -52,6 +52,7 @@ async def start(
             logger.info("User started: telegram_id=%s", telegram_id)
         else:
             logger.warning("User repository not available")
+            # Continue anyway - the bot should still respond even if database is unavailable
 
         # (Cleanup: remove unused admin check from /start)
         await update.message.reply_text(
