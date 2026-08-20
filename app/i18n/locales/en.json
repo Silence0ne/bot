@@ -9,7 +9,7 @@
   "random_ayah_error": "Failed to fetch the ayah.",
   "next_ayah_error": "Failed to fetch the ayah",
   "help": "📖 *Help - Command List*\n\n👤 *User Commands*\n/start - Initialize the bot and get started\n/random - Get a random Quran ayah\n/timezone - Set your timezone for daily ayah delivery\n\n🔐 *Superadmin Commands*\n/superadmin - Admin dashboard & system status\n\n⚠️ *Note*: Superadmin commands are restricted to authorized administrators only.",
-  "admin_dashboard": "🛠 *Bot Admin Dashboard*\n\n{stats}\n\n⚙️ *Environment Settings*\n{env_info}\n\n📡 *Bot & API Info*\n{bot_api_info}\n\n📊 *Sent Statistics*\nTotal Ayahs: {total_ayahs}\nTotal Pages: {total_pages}\n\n🤖 *Cache Status*: {quran_cache_ready}\nBot ID: {bot_id}\nAPI Status: {api_status}\n\nAdmin-only commands:\n/reload_cache - Reload the Quran cache",
+  "admin_dashboard": "🛠 *Bot Admin Dashboard*\n\n{stats}\n\n⚙️ *Environment Settings*\n{env_info}\n\n📡 *Bot & API Info*\n{bot_api_info}\n\n📊 *Sent Statistics*\nTotal Ayahs: {total_ayahs}\nTotal Pages: {total_pages}\n\n🤖 *Cache Status*: {quran_cache_ready}\nBot ID: {bot_id}\nAPI Status: {api_status}\n\n🔧 *Admin Commands*\n/reload_cache - Reload the Quran cache",
   "admin_access_denied": "You do not have access to the admin area. You are not in the superadmin list. Please provide your chat_id to the sysadmin of the bot.\n\nYour chat_id: {user_id}",
   "admin_cache_reloading": "Reloading Quran cache... please wait.",
   "admin_cache_reload_success": "The Quran cache was reloaded successfully.",

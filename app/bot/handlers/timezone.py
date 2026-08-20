@@ -81,7 +81,8 @@ async def timezone_settings(
         text = update.message.text.strip()
 
         # Check if it's one of the common timezones or a valid timezone
-        if text and text != get_message("main_menu_timezone_button", language):
+        # Skip if it's the timezone button text or a command
+        if text and text != get_message("main_menu_timezone_button", language) and not text.startswith("/"):
             # Try to set the timezone
             try:
                 # Validate timezone

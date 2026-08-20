@@ -43,6 +43,10 @@ async def dispatch_main_menu(
     if not update.message or not update.message.text:
         return
 
+    # Skip commands - they should be handled by command handlers
+    if update.message.text.startswith("/"):
+        return
+
     language = detect_language(
         update.effective_user.language_code if update.effective_user else None
     )

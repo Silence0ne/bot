@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import shutil
 from typing import TYPE_CHECKING, Protocol
 
@@ -14,10 +15,12 @@ from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
 
 if TYPE_CHECKING:
-    pass
+    from app.core.container import Container
 
 if TYPE_CHECKING:
     from app.database.models.chat import Chat
+
+logger = logging.getLogger(__name__)
 
 
 class SupportsAdminLookup(Protocol):
@@ -42,8 +45,19 @@ async def _resolve_is_superadmin(
     if telegram_id in configured_admin_ids:
         return True
 
-    chat = await chat_repository.get_by_telegram_id(telegram_id)
-    return chat is not None and chat.is_admin
+    try:
+        chat = await chat_repository.get_by_telegram_id(telegram_id)
+        if chat is None:
+            return False
+        
+        # Check if is_admin attribute exists (for database compatibility)
+        if hasattr(chat, 'is_admin'):
+            return chat.is_admin
+        
+        return False
+    except Exception as e:
+        logger.warning("Error checking admin status in database: telegram_id=%s, error=%s", telegram_id, e)
+        return False
 
 
 async def _is_superadmin(
