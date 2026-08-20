@@ -15,7 +15,7 @@ from app.schemas.ayah import Ayah
 from app.ui.keyboards import random_ayah_keyboard
 
 if TYPE_CHECKING:
-    pass
+    from app.core.container import Container
 
 logger = logging.getLogger(__name__)
 

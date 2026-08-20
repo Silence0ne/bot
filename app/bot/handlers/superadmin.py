@@ -139,14 +139,14 @@ async def _reply_admin_denied(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
-    if not update.message or not update.effective_user:
+    if not update.message:
         return
 
     language = detect_language(
         update.effective_user.language_code if update.effective_user else None
     )
 
-    user_id = update.effective_user.id
+    user_id = update.effective_user.id if update.effective_user else "unknown"
     message = get_message("admin_access_denied", language).format(user_id=user_id)
 
     await update.message.reply_text(
@@ -218,13 +218,13 @@ async def admin_settings_entry(
     if not update.message:
         return
 
-    if not await _is_superadmin(update, context):
-        await _reply_admin_denied(update, context)
-        return
-
     language = detect_language(
         update.effective_user.language_code if update.effective_user else None
     )
+
+    if not await _is_superadmin(update, context):
+        await _reply_admin_denied(update, context)
+        return
 
     container = context.application.bot_data.get("container")
     if not container:

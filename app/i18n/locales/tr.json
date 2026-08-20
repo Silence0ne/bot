@@ -8,7 +8,7 @@
   "next_ayah_button": "Sonraki Ayet",
   "random_ayah_error": "Ayet alınamadı.",
   "next_ayah_error": "Ayet alınamadı",
-  "help": "📖 *Yardım - Komut Listesi*\n\n👤 *Kullanıcı Komutları*\n/start - Botu başlat ve başla\n/random - Rastgele bir Kur'an ayeti al\n/timezone - Günlük ayet için saat diliminizi ayarlayın\n\n🔐 *Süperadmin Komutları*\n/superadmin - Yönetici paneli ve sistem durumu\n/reload_cache - Kur'an veri önbelleğini yenile\n\n⚠️ *Not*: Süperadmin komutları sadece yetkili yöneticiler içindir.",
+  "help": "📖 *Yardım - Komut Listesi*\n\n👤 *Kullanıcı Komutları*\n/start - Botu başlat ve başla\n/random - Rastgele bir Kur'an ayeti al\n/timezone - Günlük ayet için saat diliminizi ayarlayın\n\n🔐 *Süperadmin Komutları*\n/superadmin - Yönetici paneli ve sistem durumu\n\n⚠️ *Not*: Süperadmin komutları sadece yetkili yöneticiler içindir.",
   "admin_dashboard": "🛠 *Bot Yönetici Paneli*\n\n{stats}\n\n⚙️ *Mühit Ayarları*\n{env_info}\n\n📡 *Bot & API Məlumatı*\n{bot_api_info}\n\n📊 *Göndərilmə Statistikası*\nÜmumi Ayələr: {total_ayahs}\nÜmumi Səhifələr: {total_pages}\n\n🤖 *Keş Statusu*: {quran_cache_ready}\nBot ID: {bot_id}\nAPI Status: {api_status}\n\nYalnız adminlər üçün komandalar:\n/reload_cache - Quran keşini yenidən yükləmək",
   "admin_access_denied": "Yönetici alanına erişim izniniz yok. Süperadmin listesinde değilsiniz. Lütfen chat_id'nizi botun sistem yöneticisine bildirin.\n\nSizin chat_id: {user_id}",
   "admin_cache_reloading": "Kur'an önbelleği yeniden yükleniyor... lütfen bekleyin.",

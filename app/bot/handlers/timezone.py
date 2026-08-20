@@ -86,17 +86,19 @@ async def timezone_settings(
             try:
                 # Validate timezone
                 test_tz = ZoneInfo(text)
-                current_time = datetime.now(test_tz).strftime("%H:%M")
-
+                
                 # Update user's timezone
                 await chat_repo.update_preferences(
                     telegram_id=telegram_id,
                     timezone=text,
                 )
 
+                # Show their scheduled delivery time in the new timezone
+                scheduled_time = chat.daily_time or get_settings().DAILY_AYAH_DEFAULT_TIME
+
                 await update.message.reply_text(
                     get_message("timezone_set_success", language).format(
-                        timezone=text, time=current_time
+                        timezone=text, time=scheduled_time
                     ),
                     parse_mode=ParseMode.MARKDOWN,
                     reply_markup=main_menu_keyboard(language),

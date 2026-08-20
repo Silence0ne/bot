@@ -6,6 +6,7 @@ from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes
 
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
+from app.core.config import get_settings
 from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
 
