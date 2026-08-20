@@ -15,7 +15,7 @@ from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
 
 if TYPE_CHECKING:
-    from app.core.container import Container
+    pass
 
 if TYPE_CHECKING:
     from app.database.models.chat import Chat
@@ -49,14 +49,18 @@ async def _resolve_is_superadmin(
         chat = await chat_repository.get_by_telegram_id(telegram_id)
         if chat is None:
             return False
-        
+
         # Check if is_admin attribute exists (for database compatibility)
-        if hasattr(chat, 'is_admin'):
+        if hasattr(chat, "is_admin"):
             return chat.is_admin
-        
+
         return False
     except Exception as e:
-        logger.warning("Error checking admin status in database: telegram_id=%s, error=%s", telegram_id, e)
+        logger.warning(
+            "Error checking admin status in database: telegram_id=%s, error=%s",
+            telegram_id,
+            e,
+        )
         return False
 
 

@@ -33,7 +33,7 @@ class Chat(Base, UUIDMixin, TimestampMixin):
         String(5), default="03:15"
     )  # User's local time
     timezone: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    
+
     # Admin status
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
 

@@ -18,39 +18,39 @@ logger = logging.getLogger(__name__)
 
 async def add_is_admin_column():
     """Add is_admin column to chats table if it doesn't exist."""
-    settings = get_settings()
+    get_settings()
     database = Database()
-    
+
     try:
         await database.connect()
-        
+
         async with database.session() as session:
             # Check if column exists
             check_column_query = text("""
-                SELECT column_name 
-                FROM information_schema.columns 
-                WHERE table_name = 'chats' 
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = 'chats'
                 AND column_name = 'is_admin'
             """)
-            
+
             result = await session.execute(check_column_query)
             column_exists = result.fetchone()
-            
+
             if column_exists:
                 logger.info("Column 'is_admin' already exists in chats table")
                 return
-            
+
             # Add the column
             alter_query = text("""
-                ALTER TABLE chats 
+                ALTER TABLE chats
                 ADD COLUMN is_admin BOOLEAN DEFAULT FALSE
             """)
-            
+
             await session.execute(alter_query)
             await session.commit()
-            
+
             logger.info("Successfully added 'is_admin' column to chats table")
-            
+
     except Exception as e:
         logger.error(f"Failed to add is_admin column: {e}")
         raise

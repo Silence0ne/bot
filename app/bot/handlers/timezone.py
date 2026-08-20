@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 
 from telegram import Update
 from telegram.constants import ParseMode
@@ -82,12 +81,16 @@ async def timezone_settings(
 
         # Check if it's one of the common timezones or a valid timezone
         # Skip if it's the timezone button text or a command
-        if text and text != get_message("main_menu_timezone_button", language) and not text.startswith("/"):
+        if (
+            text
+            and text != get_message("main_menu_timezone_button", language)
+            and not text.startswith("/")
+        ):
             # Try to set the timezone
             try:
                 # Validate timezone
-                test_tz = ZoneInfo(text)
-                
+                ZoneInfo(text)
+
                 # Update user's timezone
                 await chat_repo.update_preferences(
                     telegram_id=telegram_id,
@@ -95,7 +98,9 @@ async def timezone_settings(
                 )
 
                 # Show their scheduled delivery time in the new timezone
-                scheduled_time = chat.daily_time or get_settings().DAILY_AYAH_DEFAULT_TIME
+                scheduled_time = (
+                    chat.daily_time or get_settings().DAILY_AYAH_DEFAULT_TIME
+                )
 
                 await update.message.reply_text(
                     get_message("timezone_set_success", language).format(
