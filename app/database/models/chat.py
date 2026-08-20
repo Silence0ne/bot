@@ -25,8 +25,10 @@ class Chat(Base, UUIDMixin, TimestampMixin):
     content_mode: Mapped[str] = mapped_column(String(32), default="random_ayah")
 
     # Daily ayah settings
+    # daily_time is stored in UTC (hardcoded Greenwich base)
+    # Users' actual delivery time is calculated based on their timezone
     daily_ayah: Mapped[bool] = mapped_column(Boolean, default=False)
-    daily_time: Mapped[str] = mapped_column(String(5), default="00:00")
+    daily_time: Mapped[str] = mapped_column(String(5), default="00:00")  # UTC time
     timezone: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     # Delivery tracking

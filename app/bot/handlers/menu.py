@@ -6,6 +6,7 @@ from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters
 
 from app.bot.handlers.random import random_ayah
+from app.bot.handlers.timezone import timezone_settings
 from app.i18n import SupportedLanguage, detect_language, get_message
 
 MenuAction = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
@@ -20,6 +21,7 @@ MenuAction = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 # further handlers in a group once one handler's filters match.
 _MENU_ROUTES: tuple[tuple[str, MenuAction], ...] = (
     ("main_menu_random_button", random_ayah),
+    ("main_menu_timezone_button", timezone_settings),
 )
 
 

@@ -60,7 +60,9 @@ class Settings(BaseSettings):
     QURAN_TRANSLATOR: str | None = None
 
     # Daily Ayah Settings
-    DAILY_AYAH_DEFAULT_TIME: str = "00:00"  # Default time in UTC (Greenwich)
+    # Hardcoded base: UTC (Greenwich) at 00:00
+    # Environment override: Set to Asia/Riyadh at 03:15 in .env
+    DAILY_AYAH_DEFAULT_TIME: str = "03:15"  # Default time in configured timezone
     DAILY_AYAH_DEFAULT_TIMEZONE: str = "Asia/Riyadh"  # Default timezone for users
 
     # Cache

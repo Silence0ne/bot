@@ -12,7 +12,13 @@ async def send_daily_ayah_job(context) -> None:
     """
     Send daily ayah to users at their scheduled time.
 
-    Runs every minute and checks if any users have a scheduled send time.
+    The job runs in UTC (hardcoded Greenwich) at 00:00 and checks users' local timezones
+    to determine if it's their scheduled time for daily ayah delivery.
+
+    System:
+    1. Hardcoded base: UTC (Greenwich) at 00:00
+    2. Environment config: Default timezone (Asia/Riyadh) and time (03:15)
+    3. User-specific: Users can set their own timezone via bot interaction
     """
     try:
         from app.core.container import Container
@@ -25,25 +31,26 @@ async def send_daily_ayah_job(context) -> None:
             logger.warning("Container or chat repository not available")
             return
 
+        # Run in UTC (hardcoded Greenwich)
         now = datetime.now(timezone.utc)
         hour = now.hour
         minute = now.minute
 
         logger.debug(
-            "Running daily ayah job: %02d:%02d",
+            "Running daily ayah job (UTC): %02d:%02d",
             hour,
             minute,
         )
 
-        # Get all users who should receive ayah at this time
+        # Get all users who should receive ayah at this time (based on their timezone)
         users = await chat_repo.list_due_for_daily_ayah()
 
         if not users:
-            logger.debug("No users scheduled for %02d:%02d", hour, minute)
+            logger.debug("No users scheduled for current time")
             return
 
         logger.info(
-            "Sending daily ayah to %d users at %02d:%02d", len(users), hour, minute
+            "Sending daily ayah to %d users", len(users)
         )
 
         for user in users:

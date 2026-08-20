@@ -4,14 +4,19 @@
   "translation_label": "📝",
   "main_menu_random_button": "Random Ayah",
   "main_menu_admin_button": "Admin Settings",
+  "main_menu_timezone_button": "⏰ Set Timezone",
   "next_ayah_button": "Next Ayah",
   "random_ayah_error": "Failed to fetch the ayah.",
   "next_ayah_error": "Failed to fetch the ayah",
-  "help": "📖 *Help - Command List*\n\n👤 *User Commands*\n/start - Initialize the bot and get started\n/random - Get a random Quran ayah\n\n🔐 *Superadmin Commands*\n/superadmin - Admin dashboard & system status\n/reload_cache - Refresh Quran data cache\n\n⚠️ *Note*: Superadmin commands are restricted to authorized administrators only.",
+  "help": "📖 *Help - Command List*\n\n👤 *User Commands*\n/start - Initialize the bot and get started\n/random - Get a random Quran ayah\n/timezone - Set your timezone for daily ayah delivery\n\n🔐 *Superadmin Commands*\n/superadmin - Admin dashboard & system status\n/reload_cache - Refresh Quran data cache\n\n⚠️ *Note*: Superadmin commands are restricted to authorized administrators only.",
   "admin_dashboard": "🛠 *Bot Admin Dashboard*\n\n{stats}\n\n⚙️ *Environment Settings*\n{env_info}\n\n📡 *Bot & API Info*\n{bot_api_info}\n\n📊 *Sent Statistics*\nTotal Ayahs: {total_ayahs}\nTotal Pages: {total_pages}\n\n🤖 *Cache Status*: {quran_cache_ready}\nBot ID: {bot_id}\nAPI Status: {api_status}\n\nAdmin-only commands:\n/reload_cache - Reload the Quran cache",
   "admin_access_denied": "You do not have access to the admin area. You are not in the superadmin list. Please provide your chat_id to the sysadmin of the bot.\n\nYour chat_id: {user_id}",
   "admin_cache_reloading": "Reloading Quran cache... please wait.",
   "admin_cache_reload_success": "The Quran cache was reloaded successfully.",
   "admin_cache_reload_failed": "Reloading the Quran cache failed. Please check the bot logs.",
-  "rate_limited": "You sent too many requests in a short time. Please wait a moment and try again."
+  "rate_limited": "You sent too many requests in a short time. Please wait a moment and try again.",
+  "timezone_prompt": "Please select your timezone for daily ayah delivery:\n\n⏰ *Available Timezones*\n\n🌍 Asia/Dubai (GMT+4)\n🌍 Asia/Riyadh (GMT+3)\n🌍 Asia/Tehran (GMT+3:30)\n🌍 Europe/London (GMT+0)\n🌍 America/New_York (GMT-5)\n🌍 America/Los_Angeles (GMT-8)\n\nOr send your timezone in format: Region/City (e.g., Asia/Kolkata)",
+  "timezone_set_success": "✅ Your timezone has been set to {timezone}\n\nDaily ayah will be sent at {time} in your local time.",
+  "timezone_set_error": "❌ Invalid timezone format. Please use format: Region/City (e.g., Asia/Riyadh)",
+  "timezone_current": "Your current timezone: {timezone}\nDaily ayah time: {time}"
 }

@@ -4,14 +4,19 @@
   "translation_label": "📝",
   "main_menu_random_button": "آیه تصادفی",
   "main_menu_admin_button": "تنظیمات ادمین",
+  "main_menu_timezone_button": "⏰ تنظیم منطقه زمانی",
   "next_ayah_button": "آیه بعدی",
   "random_ayah_error": "خطا در دریافت آیه.",
   "next_ayah_error": "خطا در دریافت آیه",
-  "help": "📖 *راهنما - لیست فرمان‌ها*\n\n👤 *فرمان‌های کاربری*\n/start - راه‌اندازی ربات و شروع کار\n/random - دریافت یک آیه تصادفی قرآن\n\n🔐 *فرمان‌های سوپرادمین*\n/superadmin - پنل مدیریت و وضعیت سیستم\n/reload_cache - بازگذاری مجدد کش داده‌های قرآن\n\n⚠️ *نکته*: فرمان‌های سوپرادمین تنها برای مدیران مجاز قابل دسترسی هستند.",
+  "help": "📖 *راهنما - لیست فرمان‌ها*\n\n👤 *فرمان‌های کاربری*\n/start - راه‌اندازی ربات و شروع کار\n/random - دریافت یک آیه تصادفی قرآن\n/timezone - تنظیم منطقه زمانی برای ارسال آیه روزانه\n\n🔐 *فرمان‌های سوپرادمین*\n/superadmin - پنل مدیریت و وضعیت سیستم\n/reload_cache - بازگذاری مجدد کش داده‌های قرآن\n\n⚠️ *نکته*: فرمان‌های سوپرادمین تنها برای مدیران مجاز قابل دسترسی هستند.",
   "admin_dashboard": "🛠 *پنل مدیریت بات*\n\n{stats}\n\n⚙️ *تنظیمات محیطی*\n{env_info}\n\n📡 *اطلاعات بات و API*\n{bot_api_info}\n\n📊 *آمار ارسال*\nکل آیات: {total_ayahs}\nکل صفحات: {total_pages}\n\n🤖 *وضعیت کش*: {quran_cache_ready}\nشناسه بات: {bot_id}\nوضعیت API: {api_status}\n\nدستورات مدیریتی:\n/reload_cache - بازگذاری مجدد کش قرآن",
   "admin_access_denied": "شما به بخش ادمین دسترسی ندارید. شما در لیست سوپرادمین نیستید. لطفاً chat_id خود را به ادمین سیستم بات اطلاع دهید.\n\nchat_id شما: {user_id}",
   "admin_cache_reloading": "در حال بارگذاری کش قرآن... لطفاً شکیبا باشید.",
   "admin_cache_reload_success": "کش قرآن با موفقیت بازنشانی شد.",
   "admin_cache_reload_failed": "بارگذاری کش قرآن با خطا مواجه شد. لطفاً لاگ‌های ربات را بررسی کنید.",
-  "rate_limited": "شما در مدت کوتاهی درخواست‌های زیادی فرستادید. لطفاً کمی صبر کنید و دوباره تلاش کنید."
+  "rate_limited": "شما در مدت کوتاهی درخواست‌های زیادی فرستادید. لطفاً کمی صبر کنید و دوباره تلاش کنید.",
+  "timezone_prompt": "لطفاً منطقه زمانی خود را برای ارسال آیه روزانه انتخاب کنید:\n\n⏰ *مناطق زمانی موجود*\n\n🌍 Asia/Dubai (GMT+4)\n🌍 Asia/Riyadh (GMT+3)\n🌍 Asia/Tehran (GMT+3:30)\n🌍 Europe/London (GMT+0)\n🌍 America/New_York (GMT-5)\n🌍 America/Los_Angeles (GMT-8)\n\nیا منطقه زمانی خود را با فرمت Region/City ارسال کنید (مثلاً: Asia/Kolkata)",
+  "timezone_set_success": "✅ منطقه زمانی شما به {timezone} تنظیم شد\n\nآیه روزانه در ساعت {time} به وقت محلی شما ارسال خواهد شد.",
+  "timezone_set_error": "❌ فرمت منطقه زمانی نامعتبر است. لطفاً از فرمت Region/City استفاده کنید (مثلاً: Asia/Riyadh)",
+  "timezone_current": "منطقه زمانی فعلی شما: {timezone}\nزمان آیه روزانه: {time}"
 }

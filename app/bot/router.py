@@ -12,6 +12,7 @@ from app.bot.handlers.superadmin import (
     admin_settings_entry,
     get_reload_cache_handler,
 )
+from app.bot.handlers.timezone import get_handler as get_timezone_handler
 
 
 def register_handlers(application: Application) -> None:
@@ -20,6 +21,7 @@ def register_handlers(application: Application) -> None:
     application.add_handler(CommandHandler("superadmin", admin_settings_entry))
     application.add_handler(get_reload_cache_handler())
     application.add_handler(get_random_handler())
+    application.add_handler(get_timezone_handler())
     application.add_handler(get_main_menu_handler())
 
     feature_checker = application.bot_data["feature_checker"]

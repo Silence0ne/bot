@@ -4,15 +4,20 @@
   "translation_label": "📝",
   "main_menu_random_button": "Təsadüfi Ayə",
   "main_menu_admin_button": "Admin Ayarları",
+  "main_menu_timezone_button": "⏰ Saat Zonası Tənzimlə",
   "next_ayah_button": "Növbəti Ayə",
   "random_ayah_error": "Ayə alınmadı.",
   "next_ayah_error": "Ayə alınmadı",
-  "help": "📖 *Kömək - Komut Siyahısı*\n\n👤 *İstifadəçi Komutları*\n/start - Botu başlat və başla\n/random - Təsadüfi Quran ayəsi al\n\n🔐 *Superadmin Komutları*\n/superadmin - Admin paneli və sistemi statusu\n/reload_cache - Quran məlumatlarını yenilə\n\n⚠️ *Qeyd*: Superadmin komutları yalnız icazəli adminlər üçündür.",
+  "help": "📖 *Kömək - Komut Siyahısı*\n\n👤 *İstifadəçi Komutları*\n/start - Botu başlat və başla\n/random - Təsadüfi Quran ayəsi al\n/timezone - Gündəlik ayə üçün saat zonasınızı təyin edin\n\n🔐 *Superadmin Komutları*\n/superadmin - Admin paneli və sistemi statusu\n/reload_cache - Quran məlumatlarını yenilə\n\n⚠️ *Qeyd*: Superadmin komutları yalnız icazəli adminlər üçündür.",
   "admin_dashboard": "🛠 *Bot Admin Paneli*\n\n{stats}\n\n⚙️ *Mühit Ayarları*\n{env_info}\n\n📡 *Bot & API Məlumatı*\n{bot_api_info}\n\n📊 *Göndərilmə Statistikası*\nÜmumi Ayələr: {total_ayahs}\nÜmumi Səhifələr: {total_pages}\n\n🤖 *Keş Statusu*: {quran_cache_ready}\nBot ID: {bot_id}\nAPI Status: {api_status}\n\nYalnız adminlər üçün komandalar:\n/reload_cache - Quran keşini yenidən yükləmək",
   "admin_access_denied": "Siz admin bölməsinə giriş səlahiyyətinə malik deyilsiniz. Siz superadmin siyahısında deyilsiniz. Zəhmət olmasa chat_id-nizi botun sistem admininə bildirin.\n\nSizin chat_id: {user_id}",
   "admin_cache_reloading": "Quran keşini yeniləyir... gözləyin.",
   "admin_cache_reload_success": "Quran keşi uğurla yeniləndi.",
   "admin_cache_reload_failed": "Quran keşinin yenilənməsi alınmadı. Zəhmət olmasa bot loglarını yoxlayın.",
-  "rate_limited": "Qısa müddətdə çox sorğu göndərdiniz. Zəhmət olmasa bir az gözləyin və yenidən cəhd edin."
+  "rate_limited": "Qısa müddətdə çox sorğu göndərdiniz. Zəhmət olmasa bir az gözləyin və yenidən cəhd edin.",
+  "timezone_prompt": "Zəhmət olmasa gündəlik ayə çatdırılması üçün saat zonasınızı seçin:\n\n⏰ *Mövcud Saat Zonaları*\n\n🌍 Asia/Dubai (GMT+4)\n🌍 Asia/Riyadh (GMT+3)\n🌍 Asia/Tehran (GMT+3:30)\n🌍 Europe/London (GMT+0)\n🌍 America/New_York (GMT-5)\n🌍 America/Los_Angeles (GMT-8)\n\nVə ya saat zonasınızı Region/City formatında göndərin (məsələn: Asia/Kolkata)",
+  "timezone_set_success": "✅ Saat zonasınız {timezone} olaraq təyin edildi\n\nGündəlik ayə yerli vaxtınızda {time} göndəriləcək.",
+  "timezone_set_error": "❌ Keçərsiz saat zona formatı. Zəhmət olmasa Region/City formatını istifadə edin (məsələn: Asia/Riyadh)",
+  "timezone_current": "Cari saat zonasınız: {timezone}\nGündəlik ayə vaxtı: {time}"
 }
 

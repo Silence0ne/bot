@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
@@ -56,7 +56,8 @@ class ChatRepository:
                 chat_type=chat_type,
                 language=language,
                 daily_ayah=enable_daily_ayah,
-                daily_time=settings.DAILY_AYAH_DEFAULT_TIME,
+                daily_time=settings.DAILY_AYAH_DEFAULT_TIME,  # Uses env config (03:15 for Riyadh)
+                timezone=settings.DAILY_AYAH_DEFAULT_TIMEZONE,  # Uses env config (Asia/Riyadh)
                 content_mode=ContentMode.RANDOM_AYAH.value,
             )
             session.add(chat)
@@ -85,7 +86,8 @@ class ChatRepository:
                     chat_type=chat_type,
                     language=language or "fa",
                     daily_ayah=chat_type == ChatType.PRIVATE.value,
-                    daily_time=settings.DAILY_AYAH_DEFAULT_TIME,
+                    daily_time=settings.DAILY_AYAH_DEFAULT_TIME,  # Uses env config (03:15 for Riyadh)
+                    timezone=settings.DAILY_AYAH_DEFAULT_TIMEZONE,  # Uses env config (Asia/Riyadh)
                     content_mode=ContentMode.RANDOM_AYAH.value,
                 )
                 session.add(chat)
@@ -215,13 +217,30 @@ class ChatRepository:
 
     @classmethod
     def _is_due_now(cls, chat: "Chat") -> bool:
+        """
+        Check if daily ayah is due for this user.
+
+        Logic:
+        1. Get current UTC time (hardcoded Greenwich base)
+        2. Convert UTC time to user's timezone
+        3. Check if converted time matches user's daily_time setting
+
+        This allows:
+        - Job runs in UTC (hardcoded)
+        - Default config uses Riyadh timezone with 03:15 time
+        - Users can set their own timezone and preferred time
+        """
         settings = get_settings()
         try:
             tz = ZoneInfo(chat.timezone or settings.DAILY_AYAH_DEFAULT_TIMEZONE)
         except Exception:
             tz = ZoneInfo("UTC")
 
-        now = datetime.now(tz)
+        # Get current time in UTC (hardcoded Greenwich)
+        now_utc = datetime.now(timezone.utc)
+        # Convert to user's timezone
+        now_user_tz = now_utc.astimezone(tz)
+
         try:
             hour_str, minute_str = chat.daily_time.split(":", 1)
             due_hour = int(hour_str)
@@ -232,4 +251,4 @@ class ChatRepository:
             )
             return False
 
-        return now.hour == due_hour and now.minute == due_minute
+        return now_user_tz.hour == due_hour and now_user_tz.minute == due_minute
