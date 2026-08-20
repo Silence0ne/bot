@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 
 from telegram import Update
 from telegram.constants import ParseMode
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 # Common timezone options for users
 COMMON_TIMEZONES = [
     "Asia/Dubai",
-    "Asia/Riyadh", 
+    "Asia/Riyadh",
     "Asia/Tehran",
     "Europe/London",
     "America/New_York",
@@ -41,7 +41,7 @@ async def timezone_settings(
 ) -> None:
     """
     Handle timezone settings via menu button or direct command.
-    
+
     Users can:
     1. Select from common timezones
     2. Type their own timezone in Region/City format
@@ -56,7 +56,7 @@ async def timezone_settings(
 
     try:
         chat_repo = context.application.bot_data.get("user_repository")
-        
+
         if not chat_repo:
             logger.warning("Chat repository not available")
             await update.message.reply_text(
@@ -64,20 +64,22 @@ async def timezone_settings(
                 reply_markup=main_menu_keyboard(language),
             )
             return
-        
+
         telegram_id = update.effective_user.id
         chat = await chat_repo.get_by_telegram_id(telegram_id)
-        
+
         if not chat:
             await update.message.reply_text(
-                get_message("start", language),  # Use the start message to encourage them to start
+                get_message(
+                    "start", language
+                ),  # Use the start message to encourage them to start
                 reply_markup=main_menu_keyboard(language),
             )
             return
 
         # Check if user sent a timezone
         text = update.message.text.strip()
-        
+
         # Check if it's one of the common timezones or a valid timezone
         if text and text != get_message("main_menu_timezone_button", language):
             # Try to set the timezone
@@ -85,26 +87,34 @@ async def timezone_settings(
                 # Validate timezone
                 test_tz = ZoneInfo(text)
                 current_time = datetime.now(test_tz).strftime("%H:%M")
-                
+
                 # Update user's timezone
                 await chat_repo.update_preferences(
                     telegram_id=telegram_id,
                     timezone=text,
                 )
-                
+
                 await update.message.reply_text(
                     get_message("timezone_set_success", language).format(
-                        timezone=text,
-                        time=current_time
+                        timezone=text, time=current_time
                     ),
                     parse_mode=ParseMode.MARKDOWN,
                     reply_markup=main_menu_keyboard(language),
                 )
-                logger.info("User timezone updated: telegram_id=%s, timezone=%s", telegram_id, text)
+                logger.info(
+                    "User timezone updated: telegram_id=%s, timezone=%s",
+                    telegram_id,
+                    text,
+                )
                 return
-                
+
             except Exception as e:
-                logger.warning("Invalid timezone: telegram_id=%s, timezone=%s, error=%s", telegram_id, text, e)
+                logger.warning(
+                    "Invalid timezone: telegram_id=%s, timezone=%s, error=%s",
+                    telegram_id,
+                    text,
+                    e,
+                )
                 await update.message.reply_text(
                     get_message("timezone_set_error", language),
                     reply_markup=main_menu_keyboard(language),
@@ -114,12 +124,11 @@ async def timezone_settings(
         # Show current timezone and options
         current_tz = chat.timezone or get_settings().DAILY_AYAH_DEFAULT_TIMEZONE
         current_time_str = chat.daily_time or get_settings().DAILY_AYAH_DEFAULT_TIME
-        
+
         message = get_message("timezone_current", language).format(
-            timezone=current_tz,
-            time=current_time_str
+            timezone=current_tz, time=current_time_str
         )
-        
+
         message += f"\n\n{get_message('timezone_prompt', language)}"
 
         await update.message.reply_text(

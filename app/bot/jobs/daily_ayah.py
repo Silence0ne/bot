@@ -49,9 +49,7 @@ async def send_daily_ayah_job(context) -> None:
             logger.debug("No users scheduled for current time")
             return
 
-        logger.info(
-            "Sending daily ayah to %d users", len(users)
-        )
+        logger.info("Sending daily ayah to %d users", len(users))
 
         for user in users:
             try:

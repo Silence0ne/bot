@@ -14,7 +14,7 @@ from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
 
 if TYPE_CHECKING:
-    from app.core.container import Container
+    pass
 
 if TYPE_CHECKING:
     from app.database.models.chat import Chat
@@ -57,7 +57,7 @@ async def _is_superadmin(
 
     settings = get_settings()
     container = context.application.bot_data.get("container")
-    
+
     if not container:
         return False
 
@@ -147,9 +147,7 @@ async def _reply_admin_denied(
     )
 
     user_id = update.effective_user.id
-    message = get_message("admin_access_denied", language).format(
-        user_id=user_id
-    )
+    message = get_message("admin_access_denied", language).format(user_id=user_id)
 
     await update.message.reply_text(
         message,

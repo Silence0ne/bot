@@ -15,7 +15,7 @@ from app.schemas.ayah import Ayah
 from app.ui.keyboards import random_ayah_keyboard
 
 if TYPE_CHECKING:
-    from app.core.container import Container
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ async def random_ayah(
 
     try:
         container = context.application.bot_data.get("container")
-        
+
         if not container:
             logger.warning("Container not available")
             await update.message.reply_text(get_message("random_ayah_error"))

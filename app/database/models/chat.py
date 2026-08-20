@@ -29,7 +29,9 @@ class Chat(Base, UUIDMixin, TimestampMixin):
     # timezone is user's timezone (e.g., "Asia/Riyadh")
     # The daily ayah job runs in UTC and converts to user's timezone to check if it's their preferred time
     daily_ayah: Mapped[bool] = mapped_column(Boolean, default=False)
-    daily_time: Mapped[str] = mapped_column(String(5), default="03:15")  # User's local time
+    daily_time: Mapped[str] = mapped_column(
+        String(5), default="03:15"
+    )  # User's local time
     timezone: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     # Delivery tracking
