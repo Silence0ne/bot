@@ -27,6 +27,7 @@ class Settings(BaseSettings):
 
     # Bot
     BOT_TOKEN: str = ""
+    BOT_USERNAME: str = "@NatiqBot"
     BOT_API: str = "https://api.telegram.org"
     PLATFORM: str = "TELEGRAM"
     BOT_LANGUAGE: str = "fa"
@@ -57,6 +58,10 @@ class Settings(BaseSettings):
     QURAN_MUSHAF: str = "hafs"
     QURAN_TRANSLATION_LANGUAGE: str = "fa"
     QURAN_TRANSLATOR: str | None = None
+
+    # Daily Ayah Settings
+    DAILY_AYAH_DEFAULT_TIME: str = "00:00"  # Default time in UTC (Greenwich)
+    DAILY_AYAH_DEFAULT_TIMEZONE: str = "Asia/Riyadh"  # Default timezone for users
 
     # Cache
     CACHE_ENABLED: bool = True

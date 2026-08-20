@@ -6,6 +6,7 @@ from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes
 
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
+from app.core.config import get_settings
 from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
 
@@ -27,7 +28,8 @@ async def start(
 
     - Auto-register user to database
     - Set default preferences
-    - Enable daily ayah at 3:15 AM
+    - Enable daily ayah at configured time
+    - Set default timezone
     """
     if not update.message or not update.effective_user:
         return
@@ -38,13 +40,21 @@ async def start(
     try:
         # Get user repository from bot data
         user_repo = context.application.bot_data.get("user_repository")
+        settings = get_settings()
 
         if user_repo:
-            # Get or create user in database
-            await user_repo.get_or_create(
+            # Get or create user in database with default timezone
+            chat = await user_repo.get_or_create(
                 telegram_id=telegram_id,
                 language=language,
             )
+            
+            # Set default timezone if not set
+            if not chat.timezone:
+                await user_repo.update_preferences(
+                    telegram_id=telegram_id,
+                    timezone=settings.DAILY_AYAH_DEFAULT_TIMEZONE,
+                )
 
             logger.info("User started: telegram_id=%s", telegram_id)
         else:

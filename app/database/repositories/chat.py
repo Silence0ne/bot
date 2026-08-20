@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.constants import ChatType, ContentMode
 
 if TYPE_CHECKING:
@@ -39,6 +40,8 @@ class ChatRepository:
     ) -> "Chat":
         from app.database.models.chat import Chat
 
+        settings = get_settings()
+
         async with self._database.session() as session:
             chat = await self._get_by_telegram_id(session, telegram_id)
 
@@ -53,7 +56,7 @@ class ChatRepository:
                 chat_type=chat_type,
                 language=language,
                 daily_ayah=enable_daily_ayah,
-                daily_time="03:15",
+                daily_time=settings.DAILY_AYAH_DEFAULT_TIME,
                 content_mode=ContentMode.RANDOM_AYAH.value,
             )
             session.add(chat)
@@ -71,6 +74,8 @@ class ChatRepository:
     ) -> "Chat":
         from app.database.models.chat import Chat
 
+        settings = get_settings()
+
         async with self._database.session() as session:
             chat = await self._get_by_telegram_id(session, telegram_id)
 
@@ -80,7 +85,7 @@ class ChatRepository:
                     chat_type=chat_type,
                     language=language or "fa",
                     daily_ayah=chat_type == ChatType.PRIVATE.value,
-                    daily_time="03:15",
+                    daily_time=settings.DAILY_AYAH_DEFAULT_TIME,
                     content_mode=ContentMode.RANDOM_AYAH.value,
                 )
                 session.add(chat)
@@ -145,6 +150,16 @@ class ChatRepository:
         today = self._local_today(chat.timezone)
         return chat.last_daily_sent_date != today
 
+    async def mark_daily_ayah_sent(self, telegram_id: int) -> None:
+        chat = await self.get_by_telegram_id(telegram_id)
+        if chat is None:
+            return
+
+        async with self._database.session() as session:
+            chat.last_daily_sent_date = self._local_today(chat.timezone)
+            await session.commit()
+            await session.refresh(chat)
+
     async def count_by_type(self) -> dict[str, int]:
         from app.database.models.chat import Chat
 
@@ -190,17 +205,19 @@ class ChatRepository:
         return result.scalar_one_or_none()
 
     @staticmethod
-    def _local_today(timezone_name: str) -> date:
+    def _local_today(timezone_name: str | None) -> date:
+        settings = get_settings()
         try:
-            tz = ZoneInfo(timezone_name)
+            tz = ZoneInfo(timezone_name or settings.DAILY_AYAH_DEFAULT_TIMEZONE)
         except Exception:
             tz = ZoneInfo("UTC")
         return datetime.now(tz).date()
 
     @classmethod
     def _is_due_now(cls, chat: "Chat") -> bool:
+        settings = get_settings()
         try:
-            tz = ZoneInfo(chat.timezone)
+            tz = ZoneInfo(chat.timezone or settings.DAILY_AYAH_DEFAULT_TIMEZONE)
         except Exception:
             tz = ZoneInfo("UTC")
 

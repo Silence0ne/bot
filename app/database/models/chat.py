@@ -26,7 +26,7 @@ class Chat(Base, UUIDMixin, TimestampMixin):
 
     # Daily ayah settings
     daily_ayah: Mapped[bool] = mapped_column(Boolean, default=False)
-    daily_time: Mapped[str] = mapped_column(String(5), default="03:15")
+    daily_time: Mapped[str] = mapped_column(String(5), default="00:00")
     timezone: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     # Delivery tracking

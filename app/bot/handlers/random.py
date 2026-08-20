@@ -8,6 +8,7 @@ from telegram.ext import CommandHandler, ContextTypes
 
 from app.api.checker import MessengerFeature
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
+from app.core.config import get_settings
 from app.core.container import Container
 from app.i18n import detect_language, get_message
 from app.schemas.ayah import Ayah
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 def format_ayah(ayah: Ayah) -> str:
     """Format ayah in a language-agnostic way."""
+    settings = get_settings()
     parts: list[str] = []
 
     # Surah header: makki/madani icon + surah name (no trailing space if no icon)
@@ -38,7 +40,7 @@ def format_ayah(ayah: Ayah) -> str:
         parts.append(f"📝 {ayah.translation} ({ayah.ayah_number})")
 
     # Attribution
-    parts.append("@NatiqBot")
+    parts.append(settings.BOT_USERNAME)
 
     return "\n\n".join(parts)
 

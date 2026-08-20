@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Protocol
 
 import psutil
 from telegram import Update
+from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, ContextTypes
 
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
@@ -130,15 +131,20 @@ async def _reply_admin_denied(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
-    if not update.message:
+    if not update.message or not update.effective_user:
         return
 
     language = detect_language(
         update.effective_user.language_code if update.effective_user else None
     )
 
+    user_id = update.effective_user.id
+    message = get_message("admin_access_denied", language).format(
+        user_id=user_id
+    )
+
     await update.message.reply_text(
-        get_message("admin_access_denied", language),
+        message,
         reply_markup=main_menu_keyboard(language),
     )
 
@@ -214,6 +220,7 @@ async def admin_settings_entry(
 
     await update.message.reply_text(
         _build_admin_dashboard(update, context, language, stats, totals),
+        parse_mode=ParseMode.MARKDOWN,
         reply_markup=main_menu_keyboard(language),
     )
 

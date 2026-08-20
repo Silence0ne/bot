@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from telegram import Update
+from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, ContextTypes
 
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
@@ -27,6 +28,7 @@ async def help_command(
 
     await update.message.reply_text(
         get_message("help", language),
+        parse_mode=ParseMode.MARKDOWN,
         reply_markup=main_menu_keyboard(language),
     )
 
