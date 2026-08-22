@@ -96,7 +96,7 @@ async def main() -> None:
         except InvalidToken as e:
             logger.error(
                 "Invalid Telegram bot token: %s. Please set a valid BOT_TOKEN in .env.docker",
-                str(e)
+                str(e),
             )
             raise
 
