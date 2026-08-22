@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
 
 from telegram import Update
 from telegram.constants import ParseMode
@@ -13,9 +12,6 @@ from app.core.config import get_settings
 from app.i18n import detect_language, get_message
 from app.schemas.ayah import Ayah
 from app.ui.keyboards import random_ayah_keyboard
-
-if TYPE_CHECKING:
-    pass
 
 logger = logging.getLogger(__name__)
 

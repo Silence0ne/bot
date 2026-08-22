@@ -13,10 +13,7 @@ from app.core.config import get_settings
 from app.core.container import Container
 from app.i18n import detect_language, get_message
 from app.schemas.ayah import Ayah
-from app.ui.keyboards.random import (
-    random_ayah_keyboard,
-    random_page_keyboard,
-)
+from app.ui.keyboards.random import random_ayah_keyboard, random_page_keyboard
 
 logger = logging.getLogger(__name__)
 

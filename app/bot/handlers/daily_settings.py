@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from typing import TYPE_CHECKING
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
@@ -291,9 +290,6 @@ async def daily_settings_callback(
         elif callback_data.startswith("daily_time_set_"):
             time = callback_data.replace("daily_time_set_", "")
             await set_time(update, context, chat_repo, telegram_id, time, language)
-        elif callback_data.startswith("daily_type_set_"):
-            daily_type = callback_data.replace("daily_type_set_", "")
-            await set_daily_type(update, context, chat_repo, telegram_id, daily_type, language)
         elif callback_data == "daily_exit":
             # Exit daily settings and show main menu
             await update.callback_query.edit_message_text(
@@ -494,12 +490,51 @@ async def set_time(
     """Set user's daily sending time."""
     try:
         await chat_repo.update_preferences(telegram_id=telegram_id, daily_time=time)
+
+        # Get updated chat to show current settings
+        chat = await chat_repo.get_by_telegram_id(telegram_id)
+
+        # Show main settings panel with updated time
+        current_tz = chat.timezone if chat else get_settings().DAILY_AYAH_DEFAULT_TIMEZONE
+        current_time = chat.daily_time if chat else time
+        current_type = chat.daily_type if chat else "ayah"
         settings = get_settings()
 
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    get_message("daily_settings_timezone", language),
+                    callback_data="daily_tz_continent",
+                ),
+                InlineKeyboardButton(
+                    get_message("daily_settings_time", language),
+                    callback_data="daily_time_hour",
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    get_message("daily_settings_type", language),
+                    callback_data="daily_type",
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    get_message("daily_settings_back", language),
+                    callback_data="daily_back",
+                ),
+                InlineKeyboardButton(
+                    get_message("main_menu_daily_settings_button", language),
+                    callback_data="daily_exit",
+                ),
+            ],
+        ]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
         await update.callback_query.edit_message_text(
-            f"{get_message('time_set_success', language).format(time=time)}\n\n📱 {settings.BOT_USERNAME}",
+            f"{get_message('daily_settings_current', language).format(timezone=current_tz, time=current_time, type=current_type)}\n\n📱 {settings.BOT_USERNAME}",
             parse_mode=ParseMode.MARKDOWN,
-            reply_markup=main_menu_keyboard(language),
+            reply_markup=reply_markup,
         )
 
         logger.info("User daily time updated: telegram_id=%s, time=%s", telegram_id, time)

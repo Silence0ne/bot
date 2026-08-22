@@ -452,11 +452,12 @@ class NatiqProvider:
         if not self._cache.ayahs:
             raise RuntimeError("Quran cache empty")
 
-        page_ayahs = []
-        for ayah in self._cache.ayahs:
-            metadata = self._get_ayah_metadata(ayah)
-            if metadata.get("page") == page_number:
-                page_ayahs.append(self._build_ayah_from_item(ayah))
+        # Optimize by filtering with list comprehension instead of loop
+        page_ayahs = [
+            self._build_ayah_from_item(ayah)
+            for ayah in self._cache.ayahs
+            if self._get_ayah_metadata(ayah).get("page") == page_number
+        ]
 
         return page_ayahs
 
