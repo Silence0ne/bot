@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.constants import ChatType, ContentMode
 
 if TYPE_CHECKING:
@@ -39,6 +40,8 @@ class ChatRepository:
     ) -> "Chat":
         from app.database.models.chat import Chat
 
+        settings = get_settings()
+
         async with self._database.session() as session:
             chat = await self._get_by_telegram_id(session, telegram_id)
 
@@ -53,7 +56,9 @@ class ChatRepository:
                 chat_type=chat_type,
                 language=language,
                 daily_ayah=enable_daily_ayah,
-                daily_time="03:15",
+                daily_time=settings.DAILY_AYAH_DEFAULT_TIME,  # Uses env config (03:15 for Riyadh)
+                timezone=settings.DAILY_AYAH_DEFAULT_TIMEZONE,  # Uses env config (Asia/Riyadh)
+                daily_type="ayah",  # Default to ayah type
                 content_mode=ContentMode.RANDOM_AYAH.value,
             )
             session.add(chat)
@@ -71,6 +76,8 @@ class ChatRepository:
     ) -> "Chat":
         from app.database.models.chat import Chat
 
+        settings = get_settings()
+
         async with self._database.session() as session:
             chat = await self._get_by_telegram_id(session, telegram_id)
 
@@ -80,7 +87,9 @@ class ChatRepository:
                     chat_type=chat_type,
                     language=language or "fa",
                     daily_ayah=chat_type == ChatType.PRIVATE.value,
-                    daily_time="03:15",
+                    daily_time=settings.DAILY_AYAH_DEFAULT_TIME,  # Uses env config (03:15 for Riyadh)
+                    timezone=settings.DAILY_AYAH_DEFAULT_TIMEZONE,  # Uses env config (Asia/Riyadh)
+                    daily_type="ayah",  # Default to ayah type
                     content_mode=ContentMode.RANDOM_AYAH.value,
                 )
                 session.add(chat)
@@ -102,6 +111,7 @@ class ChatRepository:
         daily_time: str | None = None,
         timezone: str | None = None,
         content_mode: str | None = None,
+        daily_type: str | None = None,
     ) -> "Chat | None":
         async with self._database.session() as session:
             chat = await self._get_by_telegram_id(session, telegram_id)
@@ -118,6 +128,8 @@ class ChatRepository:
                 chat.timezone = timezone
             if content_mode is not None:
                 chat.content_mode = content_mode
+            if daily_type is not None:
+                chat.daily_type = daily_type
 
             await session.commit()
             await session.refresh(chat)
@@ -144,6 +156,16 @@ class ChatRepository:
 
         today = self._local_today(chat.timezone)
         return chat.last_daily_sent_date != today
+
+    async def mark_daily_ayah_sent(self, telegram_id: int) -> None:
+        async with self._database.session() as session:
+            chat = await self._get_by_telegram_id(session, telegram_id)
+            if chat is None:
+                return
+
+            chat.last_daily_sent_date = self._local_today(chat.timezone)
+            await session.commit()
+            await session.refresh(chat)
 
     async def count_by_type(self) -> dict[str, int]:
         from app.database.models.chat import Chat
@@ -190,21 +212,40 @@ class ChatRepository:
         return result.scalar_one_or_none()
 
     @staticmethod
-    def _local_today(timezone_name: str) -> date:
+    def _local_today(timezone_name: str | None) -> date:
+        settings = get_settings()
         try:
-            tz = ZoneInfo(timezone_name)
+            tz = ZoneInfo(timezone_name or settings.DAILY_AYAH_DEFAULT_TIMEZONE)
         except Exception:
             tz = ZoneInfo("UTC")
         return datetime.now(tz).date()
 
     @classmethod
     def _is_due_now(cls, chat: "Chat") -> bool:
+        """
+        Check if daily ayah is due for this user.
+
+        Logic:
+        1. Get current UTC time (hardcoded Greenwich base)
+        2. Convert UTC time to user's timezone
+        3. Check if converted time matches user's daily_time setting
+
+        This allows:
+        - Job runs in UTC (hardcoded)
+        - Default config uses Riyadh timezone with 03:15 time
+        - Users can set their own timezone and preferred time
+        """
+        settings = get_settings()
         try:
-            tz = ZoneInfo(chat.timezone)
+            tz = ZoneInfo(chat.timezone or settings.DAILY_AYAH_DEFAULT_TIMEZONE)
         except Exception:
             tz = ZoneInfo("UTC")
 
-        now = datetime.now(tz)
+        # Get current time in UTC (hardcoded Greenwich)
+        now_utc = datetime.now(timezone.utc)
+        # Convert to user's timezone
+        now_user_tz = now_utc.astimezone(tz)
+
         try:
             hour_str, minute_str = chat.daily_time.split(":", 1)
             due_hour = int(hour_str)
@@ -215,4 +256,4 @@ class ChatRepository:
             )
             return False
 
-        return now.hour == due_hour and now.minute == due_minute
+        return now_user_tz.hour == due_hour and now_user_tz.minute == due_minute

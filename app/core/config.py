@@ -27,6 +27,7 @@ class Settings(BaseSettings):
 
     # Bot
     BOT_TOKEN: str = ""
+    BOT_USERNAME: str = "@NatiqBot"
     BOT_API: str = "https://api.telegram.org"
     PLATFORM: str = "TELEGRAM"
     BOT_LANGUAGE: str = "fa"
@@ -57,6 +58,12 @@ class Settings(BaseSettings):
     QURAN_MUSHAF: str = "hafs"
     QURAN_TRANSLATION_LANGUAGE: str = "fa"
     QURAN_TRANSLATOR: str | None = None
+
+    # Daily Ayah Settings
+    # Hardcoded base: UTC (Greenwich) at 00:00
+    # Environment override: Set to Asia/Riyadh at 03:15 in .env
+    DAILY_AYAH_DEFAULT_TIME: str = "03:15"  # Default time in configured timezone
+    DAILY_AYAH_DEFAULT_TIMEZONE: str = "Asia/Riyadh"  # Default timezone for users
 
     # Cache
     CACHE_ENABLED: bool = True
@@ -127,7 +134,7 @@ class Settings(BaseSettings):
         return headers
 
     model_config = SettingsConfigDict(
-        env_file=".env.docker",
+        env_file=[".env", ".env.docker"],
         env_file_encoding="utf-8",
         extra="ignore",
         case_sensitive=True,

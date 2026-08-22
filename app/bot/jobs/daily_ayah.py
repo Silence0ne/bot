@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from telegram.ext import Application, JobQueue
 
@@ -12,49 +12,54 @@ async def send_daily_ayah_job(context) -> None:
     """
     Send daily ayah to users at their scheduled time.
 
-    Runs every minute and checks if any users have a scheduled send time.
+    The job runs in UTC (hardcoded Greenwich) at 00:00 and checks users' local timezones
+    to determine if it's their scheduled time for daily ayah delivery.
+
+    System:
+    1. Hardcoded base: UTC (Greenwich) at 00:00
+    2. Environment config: Default timezone (Asia/Riyadh) and time (03:15)
+    3. User-specific: Users can set their own timezone via bot interaction
     """
     try:
         from app.core.container import Container
-        from app.repositories.user_repository import UserRepository
+        from app.database.repositories.chat import ChatRepository
 
         container: Container = context.application.bot_data.get("container")
-        user_repo: UserRepository = context.application.bot_data.get("user_repository")
+        chat_repo: ChatRepository = context.application.bot_data.get("user_repository")
 
-        if not container or not user_repo:
-            logger.warning("Container or user repository not available")
+        if not container or not chat_repo:
+            logger.warning("Container or chat repository not available")
             return
 
-        now = datetime.now()
+        # Run in UTC (hardcoded Greenwich)
+        now = datetime.now(timezone.utc)
         hour = now.hour
         minute = now.minute
 
         logger.debug(
-            "Running daily ayah job: %02d:%02d",
+            "Running daily ayah job (UTC): %02d:%02d",
             hour,
             minute,
         )
 
-        # Get all users who should receive ayah at this time
-        users = await user_repo.get_users_for_daily_ayah(hour, minute)
+        # Get all users who should receive ayah at this time (based on their timezone)
+        users = await chat_repo.list_due_for_daily_ayah()
 
         if not users:
-            logger.debug("No users scheduled for %02d:%02d", hour, minute)
+            logger.debug("No users scheduled for current time")
             return
 
-        logger.info(
-            "Sending daily ayah to %d users at %02d:%02d", len(users), hour, minute
-        )
+        logger.info("Sending daily ayah to %d users", len(users))
 
         for user in users:
             try:
                 # Check if already sent today
-                should_send = await user_repo.should_send_daily_ayah(user.telegram_id)
+                should_send = await chat_repo.should_send_daily_ayah(user.chat_id)
 
                 if not should_send:
                     logger.debug(
                         "Already sent today: telegram_id=%s",
-                        user.telegram_id,
+                        user.chat_id,
                     )
                     continue
 
@@ -74,16 +79,16 @@ async def send_daily_ayah_job(context) -> None:
 
                 # Send to user
                 await context.bot.send_message(
-                    chat_id=user.telegram_id,
+                    chat_id=user.chat_id,
                     text=message,
                 )
 
                 # Mark as sent
-                await user_repo.mark_daily_ayah_sent(user.telegram_id)
+                await chat_repo.mark_daily_ayah_sent(user.chat_id)
 
                 logger.info(
                     "Sent daily ayah: telegram_id=%s, surah=%d, ayah=%d",
-                    user.telegram_id,
+                    user.chat_id,
                     ayah.surah_number,
                     ayah.ayah_number,
                 )
@@ -91,7 +96,7 @@ async def send_daily_ayah_job(context) -> None:
             except Exception as exc:
                 logger.exception(
                     "Failed to send daily ayah: telegram_id=%s, error=%s",
-                    user.telegram_id,
+                    user.chat_id,
                     exc,
                 )
                 continue

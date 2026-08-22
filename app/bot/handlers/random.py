@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from telegram import Update
 from telegram.constants import ParseMode
@@ -8,16 +9,20 @@ from telegram.ext import CommandHandler, ContextTypes
 
 from app.api.checker import MessengerFeature
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
-from app.core.container import Container
+from app.core.config import get_settings
 from app.i18n import detect_language, get_message
 from app.schemas.ayah import Ayah
 from app.ui.keyboards import random_ayah_keyboard
+
+if TYPE_CHECKING:
+    pass
 
 logger = logging.getLogger(__name__)
 
 
 def format_ayah(ayah: Ayah) -> str:
     """Format ayah in a language-agnostic way."""
+    settings = get_settings()
     parts: list[str] = []
 
     # Surah header: makki/madani icon + surah name (no trailing space if no icon)
@@ -38,7 +43,7 @@ def format_ayah(ayah: Ayah) -> str:
         parts.append(f"📝 {ayah.translation} ({ayah.ayah_number})")
 
     # Attribution
-    parts.append("@NatiqBot")
+    parts.append(settings.BOT_USERNAME)
 
     return "\n\n".join(parts)
 
@@ -58,7 +63,12 @@ async def random_ayah(
         return
 
     try:
-        container: Container = context.application.bot_data["container"]
+        container = context.application.bot_data.get("container")
+
+        if not container:
+            logger.warning("Container not available")
+            await update.message.reply_text(get_message("random_ayah_error"))
+            return
 
         if not container.quran_cache_ready:
             await update.message.reply_text(get_message("random_ayah_error"))

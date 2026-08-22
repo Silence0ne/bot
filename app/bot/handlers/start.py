@@ -27,7 +27,8 @@ async def start(
 
     - Auto-register user to database
     - Set default preferences
-    - Enable daily ayah at 3:15 AM
+    - Enable daily ayah at configured time
+    - Set default timezone
     """
     if not update.message or not update.effective_user:
         return
@@ -41,6 +42,7 @@ async def start(
 
         if user_repo:
             # Get or create user in database
+            # The repository will set default timezone (Asia/Riyadh) and time (03:15) from env config
             await user_repo.get_or_create(
                 telegram_id=telegram_id,
                 language=language,
@@ -49,6 +51,7 @@ async def start(
             logger.info("User started: telegram_id=%s", telegram_id)
         else:
             logger.warning("User repository not available")
+            # Continue anyway - the bot should still respond even if database is unavailable
 
         # (Cleanup: remove unused admin check from /start)
         await update.message.reply_text(

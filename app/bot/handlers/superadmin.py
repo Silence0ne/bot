@@ -1,20 +1,26 @@
 from __future__ import annotations
 
+import logging
 import shutil
 from typing import TYPE_CHECKING, Protocol
 
 import psutil
 from telegram import Update
+from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, ContextTypes
 
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
 from app.core.config import get_settings
-from app.core.container import Container
 from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
 
 if TYPE_CHECKING:
+    pass
+
+if TYPE_CHECKING:
     from app.database.models.chat import Chat
+
+logger = logging.getLogger(__name__)
 
 
 class SupportsAdminLookup(Protocol):
@@ -39,8 +45,23 @@ async def _resolve_is_superadmin(
     if telegram_id in configured_admin_ids:
         return True
 
-    chat = await chat_repository.get_by_telegram_id(telegram_id)
-    return chat is not None and chat.is_admin
+    try:
+        chat = await chat_repository.get_by_telegram_id(telegram_id)
+        if chat is None:
+            return False
+
+        # Check if is_admin attribute exists (for database compatibility)
+        if hasattr(chat, "is_admin"):
+            return chat.is_admin
+
+        return False
+    except Exception as e:
+        logger.warning(
+            "Error checking admin status in database: telegram_id=%s, error=%s",
+            telegram_id,
+            e,
+        )
+        return False
 
 
 async def _is_superadmin(
@@ -53,12 +74,15 @@ async def _is_superadmin(
         return False
 
     settings = get_settings()
-    container: Container = context.application.bot_data["container"]
+    container = context.application.bot_data.get("container")
+
+    if not container:
+        return False
 
     return await _resolve_is_superadmin(
         user.id,
         configured_admin_ids=settings.admin_user_ids,
-        chat_repository=container.chat_repository,  # <-- Changed here
+        chat_repository=container.chat_repository,
     )
 
 
@@ -67,9 +91,12 @@ async def _get_system_stats(context: ContextTypes.DEFAULT_TYPE) -> str:
     ram = psutil.virtual_memory()
     disk = shutil.disk_usage("/")
 
-    container: Container = context.application.bot_data["container"]
-    user_counts = await container.chat_repository.count_by_type()
-    total_users = sum(user_counts.values())
+    container = context.application.bot_data.get("container")
+    if container:
+        user_counts = await container.chat_repository.count_by_type()
+        total_users = sum(user_counts.values())
+    else:
+        total_users = 0
 
     return (
         f"🖥 CPU: {cpu_usage}%\n"
@@ -87,7 +114,7 @@ def _build_admin_dashboard(
     totals: dict[str, int],
 ) -> str:
     settings = get_settings()
-    container: Container = context.application.bot_data["container"]
+    container = context.application.bot_data.get("container")
 
     # Admin list (env)
     admin_list = ", ".join(map(str, sorted(settings.admin_user_ids)))
@@ -109,9 +136,9 @@ def _build_admin_dashboard(
 
     # Helper to get cache icon
     def _get_cache_icon() -> str:
-        if container.loader.loading:
+        if container and container.loader.loading:
             return "🔄"
-        return "✅" if container.quran_cache_ready else "❌"
+        return "✅" if container and container.quran_cache_ready else "❌"
 
     return get_message("admin_dashboard", language).format(
         stats=stats,
@@ -137,8 +164,11 @@ async def _reply_admin_denied(
         update.effective_user.language_code if update.effective_user else None
     )
 
+    user_id = update.effective_user.id if update.effective_user else "unknown"
+    message = get_message("admin_access_denied", language).format(user_id=user_id)
+
     await update.message.reply_text(
-        get_message("admin_access_denied", language),
+        message,
         reply_markup=main_menu_keyboard(language),
     )
 
@@ -171,7 +201,13 @@ async def reload_quran_cache(
         await _reply_admin_denied(update, context)
         return
 
-    container: Container = context.application.bot_data["container"]
+    container = context.application.bot_data.get("container")
+    if not container:
+        await update.message.reply_text(
+            "Service temporarily unavailable. Please try again.",
+            reply_markup=main_menu_keyboard(language),
+        )
+        return
 
     await update.message.reply_text(get_message("admin_cache_reloading", language))
 
@@ -200,20 +236,28 @@ async def admin_settings_entry(
     if not update.message:
         return
 
-    if not await _is_superadmin(update, context):
-        await _reply_admin_denied(update, context)
-        return
-
     language = detect_language(
         update.effective_user.language_code if update.effective_user else None
     )
 
-    container: Container = context.application.bot_data["container"]
+    if not await _is_superadmin(update, context):
+        await _reply_admin_denied(update, context)
+        return
+
+    container = context.application.bot_data.get("container")
+    if not container:
+        await update.message.reply_text(
+            "Service temporarily unavailable. Please try again.",
+            reply_markup=main_menu_keyboard(language),
+        )
+        return
+
     stats = await _get_system_stats(context)
     totals = await container.chat_repository.get_send_totals()
 
     await update.message.reply_text(
         _build_admin_dashboard(update, context, language, stats, totals),
+        parse_mode=ParseMode.MARKDOWN,
         reply_markup=main_menu_keyboard(language),
     )
 

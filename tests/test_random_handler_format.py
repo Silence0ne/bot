@@ -1,4 +1,5 @@
 from app.bot.handlers.random import format_ayah
+from app.core.config import get_settings
 from app.schemas.ayah import Ayah
 
 
@@ -37,11 +38,12 @@ def test_format_ayah_includes_makki_icon() -> None:
     )
 
     text = format_ayah(ayah)
+    settings = get_settings()
 
     assert "🕋 *الفاتحة*" in text
     assert "📖 *sample text ﴿7﴾*" in text
     assert "📝 sample translation (7)" in text
-    assert "@NatiqBot" in text
+    assert settings.BOT_USERNAME in text
 
 
 def test_format_ayah_includes_madani_icon() -> None:

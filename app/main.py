@@ -4,6 +4,7 @@ import asyncio
 import logging
 
 import httpx
+from telegram.error import InvalidToken
 
 from app.api.checker import APIFeatureChecker
 from app.bot.application import create_application
@@ -71,9 +72,6 @@ async def main() -> None:
     try:
         await container.startup()
 
-        # Load cache in the background so it doesn't block startup
-        asyncio.create_task(container.load_cache())
-
         logger.info("All services initialized.")
 
         if settings.BOT_API:
@@ -93,7 +91,14 @@ async def main() -> None:
         )
 
         logger.info("Initializing Telegram application...")
-        await application.initialize()
+        try:
+            await application.initialize()
+        except InvalidToken as e:
+            logger.error(
+                "Invalid Telegram bot token: %s. Please set a valid BOT_TOKEN in .env.docker",
+                str(e),
+            )
+            raise
 
         logger.info("Starting Telegram application...")
         await application.start()
@@ -101,6 +106,7 @@ async def main() -> None:
         if application.updater is None:
             raise RuntimeError("Updater is not available")
 
+        # Start polling first so bot can handle commands immediately
         await application.updater.start_polling(
             drop_pending_updates=True,
             poll_interval=2.0,
@@ -110,7 +116,11 @@ async def main() -> None:
 
         polling_started = True
 
-        logger.info("Bot is now polling.")
+        logger.info("Bot is now polling and ready to handle commands.")
+
+        # Load cache after bot is polling (in background, bot is already working)
+        logger.info("Loading Quran cache in background...")
+        asyncio.create_task(container.load_cache())
 
         while True:
             await asyncio.sleep(3600)

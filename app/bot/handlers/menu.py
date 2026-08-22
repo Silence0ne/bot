@@ -5,7 +5,10 @@ from collections.abc import Awaitable, Callable
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters
 
+from app.bot.handlers.daily_settings import daily_settings
 from app.bot.handlers.random import random_ayah
+from app.bot.handlers.random_page import random_page
+from app.bot.handlers.timezone import timezone_settings
 from app.i18n import SupportedLanguage, detect_language, get_message
 
 MenuAction = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
@@ -20,6 +23,8 @@ MenuAction = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 # further handlers in a group once one handler's filters match.
 _MENU_ROUTES: tuple[tuple[str, MenuAction], ...] = (
     ("main_menu_random_button", random_ayah),
+    ("main_menu_random_page_button", random_page),
+    ("main_menu_daily_settings_button", daily_settings),
 )
 
 
@@ -39,6 +44,10 @@ async def dispatch_main_menu(
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
     if not update.message or not update.message.text:
+        return
+
+    # Skip commands - they should be handled by command handlers
+    if update.message.text.startswith("/"):
         return
 
     language = detect_language(
