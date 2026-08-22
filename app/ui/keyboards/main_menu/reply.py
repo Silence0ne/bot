@@ -8,8 +8,11 @@ from app.i18n import get_message
 def main_menu_keyboard(language: str) -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         [
-            [KeyboardButton(get_message("main_menu_random_button", language))],
-            [KeyboardButton(get_message("main_menu_timezone_button", language))],
+            [
+                KeyboardButton(get_message("main_menu_random_button", language)),
+                KeyboardButton(get_message("main_menu_random_page_button", language)),
+            ],
+            [KeyboardButton(get_message("main_menu_daily_settings_button", language))],
         ],
         resize_keyboard=True,
         one_time_keyboard=False,
