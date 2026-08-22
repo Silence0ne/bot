@@ -43,7 +43,7 @@ def format_ayah(ayah: Ayah) -> str:
         parts.append(f"📝 {ayah.translation} ({ayah.ayah_number})")
 
     # Attribution
-    parts.append(settings.BOT_USERNAME)
+    parts.append(f"📱 {settings.BOT_USERNAME}")
 
     return "\n\n".join(parts)
 
@@ -67,11 +67,13 @@ async def random_ayah(
 
         if not container:
             logger.warning("Container not available")
-            await update.message.reply_text(get_message("random_ayah_error"))
+            settings = get_settings()
+            await update.message.reply_text(f"{get_message('random_ayah_error')}\n\n📱 {settings.BOT_USERNAME}")
             return
 
         if not container.quran_cache_ready:
-            await update.message.reply_text(get_message("random_ayah_error"))
+            settings = get_settings()
+            await update.message.reply_text(f"{get_message('random_ayah_error')}\n\n📱 {settings.BOT_USERNAME}")
             return
 
         ayah: Ayah = await container.provider.random_ayah()
@@ -107,7 +109,8 @@ async def random_ayah(
 
     except Exception as exc:
         logger.exception("Random ayah failed: %s", exc)
-        await update.message.reply_text(get_message("random_ayah_error"))
+        settings = get_settings()
+        await update.message.reply_text(f"{get_message('random_ayah_error')}\n\n📱 {settings.BOT_USERNAME}")
 
 
 def get_handler() -> CommandHandler:

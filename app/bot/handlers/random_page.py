@@ -41,10 +41,11 @@ def format_page(ayahs: list[Ayah]) -> str:
     # Surah header
     if ayahs:
         first_ayah = ayahs[0]
+        page_num = first_ayah.page if first_ayah.page else "?"
         if first_ayah.surah_icon:
-            parts.append(f"{first_ayah.surah_icon} *{first_ayah.surah_name}*")
+            parts.append(f"{first_ayah.surah_icon} *{first_ayah.surah_name}* (Page {page_num})")
         else:
-            parts.append(f"*{first_ayah.surah_name}*")
+            parts.append(f"*{first_ayah.surah_name}* (Page {page_num})")
 
         # Bismillah (shown before the first ayah when applicable)
         if first_ayah.show_bismillah_line and first_ayah.bismillah_text:
@@ -85,15 +86,24 @@ async def random_page(
 
         if not container:
             logger.warning("Container not available")
-            await update.message.reply_text(get_message("random_page_error"))
+            settings = get_settings()
+            await update.message.reply_text(f"{get_message('random_page_error')}\n\n📱 {settings.BOT_USERNAME}")
             return
 
         if not container.quran_cache_ready:
-            await update.message.reply_text(get_message("random_page_loading"))
+            settings = get_settings()
+            await update.message.reply_text(f"{get_message('random_page_loading')}\n\n📱 {settings.BOT_USERNAME}")
             return
 
         # Generate random page
         page_ayahs = await generate_random_page(container)
+
+        # Reset translation state for new random page
+        context.user_data["show_translation"] = False
+
+        # Store current page number for next page navigation
+        if page_ayahs:
+            context.user_data["current_page"] = page_ayahs[0].page
 
         # Track in database
         if update.effective_user and page_ayahs:
@@ -117,7 +127,8 @@ async def random_page(
         if context.application.bot_data["feature_checker"].supports(
             MessengerFeature.INLINE_KEYBOARD
         ) and page_ayahs:
-            reply_markup = random_page_keyboard(page_ayahs[0].uuid, language)
+            show_translation = context.user_data.get("show_translation", False)
+            reply_markup = random_page_keyboard(page_ayahs[0].uuid, language, show_translation)
 
         await update.message.reply_text(
             text=format_page(page_ayahs),
@@ -127,7 +138,8 @@ async def random_page(
 
     except Exception as exc:
         logger.exception("Random page failed: %s", exc)
-        await update.message.reply_text(get_message("random_page_error"))
+        settings = get_settings()
+        await update.message.reply_text(f"{get_message('random_page_error')}\n\n📱 {settings.BOT_USERNAME}")
 
 
 def get_handler() -> CommandHandler:

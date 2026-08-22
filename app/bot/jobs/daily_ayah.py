@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 
 from telegram.ext import Application, JobQueue
 
+from app.core.config import get_settings
+
 logger = logging.getLogger(__name__)
 
 
@@ -65,6 +67,7 @@ async def send_daily_ayah_job(context) -> None:
 
                 # Get random ayah
                 ayah = await container.provider.random_ayah()
+                settings = get_settings()
 
                 # Format message
                 message = (
@@ -76,6 +79,8 @@ async def send_daily_ayah_job(context) -> None:
 
                 if ayah.translation:
                     message += f"\n\n📝 ترجمه:\n{ayah.translation}"
+
+                message += f"\n\n📱 {settings.BOT_USERNAME}"
 
                 # Send to user
                 await context.bot.send_message(

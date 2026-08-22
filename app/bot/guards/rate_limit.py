@@ -11,6 +11,7 @@ from typing import Protocol
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from app.core.config import get_settings
 from app.i18n import detect_language, get_message
 
 
@@ -106,21 +107,24 @@ async def _reply_rate_limited(
     context: ContextTypes.DEFAULT_TYPE,
     message: str,
 ) -> None:
+    settings = get_settings()
+    message_with_username = f"{message}\n\n📱 {settings.BOT_USERNAME}"
+
     if update.callback_query is not None:
         await update.callback_query.answer(
-            message,
+            message_with_username,
             show_alert=False,
         )
         return
 
     if update.message is not None:
-        await update.message.reply_text(message)
+        await update.message.reply_text(message_with_username)
         return
 
     if update.effective_chat is not None:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=message,
+            text=message_with_username,
         )
 
 
