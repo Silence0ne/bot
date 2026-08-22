@@ -8,6 +8,8 @@
   "main_menu_admin_button": "إعدادات المشرف",
   "main_menu_timezone_button": "⏰ تعيين المنطقة الزمنية",
   "next_ayah_button": "الآية التالية",
+  "next_page_button": "الصفحة التالية",
+  "page_translation_button": "📝 ترجمة",
   "random_ayah_error": "تعذر جلب الآية.",
   "random_page_error": "تعذر جلب الصفحة.",
   "random_page_loading": "جارٍ تحميل ذاكرة القرآن... يرجى الانتظار.",

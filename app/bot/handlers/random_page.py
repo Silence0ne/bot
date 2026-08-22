@@ -13,12 +13,24 @@ from app.bot.guards.rate_limit import RateLimitRule, rate_limit
 from app.core.config import get_settings
 from app.i18n import detect_language, get_message
 from app.schemas.ayah import Ayah
-from app.ui.keyboards import random_ayah_keyboard
+from app.ui.keyboards.random import random_page_keyboard
 
 if TYPE_CHECKING:
-    pass
+    from app.core.container import Container
 
 logger = logging.getLogger(__name__)
+
+
+async def generate_random_page(container: Container) -> list[Ayah]:
+    """Generate a random page with 10-15 ayahs."""
+    ayah_count = random.randint(10, 15)
+    page_ayahs: list[Ayah] = []
+
+    for _ in range(ayah_count):
+        ayah: Ayah = await container.provider.random_ayah()
+        page_ayahs.append(ayah)
+
+    return page_ayahs
 
 
 def format_page(ayahs: list[Ayah]) -> str:
@@ -37,15 +49,21 @@ def format_page(ayahs: list[Ayah]) -> str:
         # Bismillah (shown before the first ayah when applicable)
         if first_ayah.show_bismillah_line and first_ayah.bismillah_text:
             parts.append(first_ayah.bismillah_text)
+            parts.append("")  # Add spacing after bismillah
 
-    # Format each ayah in the page
-    for ayah in ayahs:
+    # Format each ayah in the page with better spacing
+    for i, ayah in enumerate(ayahs):
+        # Add a separator between ayahs (except first)
+        if i > 0:
+            parts.append("─" * 10)  # Visual separator
+
         parts.append(f"📖 *{ayah.text} ﴿{ayah.ayah_number}﴾*")
 
     # Attribution
-    parts.append(settings.BOT_USERNAME)
+    parts.append("")
+    parts.append(f"📱 {settings.BOT_USERNAME}")
 
-    return "\n\n".join(parts)
+    return "\n".join(parts)
 
 
 @rate_limit(
@@ -74,14 +92,8 @@ async def random_page(
             await update.message.reply_text(get_message("random_page_loading"))
             return
 
-        # Get multiple random ayahs to form a "page" (typically 10-15 ayahs)
-        # Since the API doesn't have a specific page endpoint, we'll get random ayahs
-        ayah_count = random.randint(10, 15)
-        page_ayahs: list[Ayah] = []
-
-        for _ in range(ayah_count):
-            ayah: Ayah = await container.provider.random_ayah()
-            page_ayahs.append(ayah)
+        # Generate random page
+        page_ayahs = await generate_random_page(container)
 
         # Track in database
         if update.effective_user and page_ayahs:
@@ -105,7 +117,7 @@ async def random_page(
         if context.application.bot_data["feature_checker"].supports(
             MessengerFeature.INLINE_KEYBOARD
         ) and page_ayahs:
-            reply_markup = random_ayah_keyboard(page_ayahs[0].uuid, language)
+            reply_markup = random_page_keyboard(page_ayahs[0].uuid, language)
 
         await update.message.reply_text(
             text=format_page(page_ayahs),

@@ -8,6 +8,8 @@
   "main_menu_admin_button": "Admin Settings",
   "main_menu_timezone_button": "⏰ Set Timezone",
   "next_ayah_button": "Next Ayah",
+  "next_page_button": "Next Page",
+  "page_translation_button": "📝 Translation",
   "random_ayah_error": "Failed to fetch the ayah.",
   "random_page_error": "Failed to fetch the page.",
   "random_page_loading": "Loading Quran cache... please wait.",

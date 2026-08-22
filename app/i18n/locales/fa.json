@@ -8,6 +8,8 @@
   "main_menu_admin_button": "تنظیمات ادمین",
   "main_menu_timezone_button": "⏰ تنظیم منطقه زمانی",
   "next_ayah_button": "آیه بعدی",
+  "next_page_button": "صفحه بعدی",
+  "page_translation_button": "📝 ترجمه",
   "random_ayah_error": "خطا در دریافت آیه.",
   "random_page_error": "خطا در دریافت صفحه.",
   "random_page_loading": "در حال بارگذاری کش قرآن... لطفاً شکیبا باشید.",
