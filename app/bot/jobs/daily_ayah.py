@@ -48,13 +48,21 @@ async def send_daily_ayah_job(context) -> None:
         users = await chat_repo.list_due_for_daily_ayah()
 
         if not users:
-            logger.debug("No users scheduled for current time")
+            logger.info("No users scheduled for current time")
             return
 
         logger.info("Sending daily ayah to %d users", len(users))
 
         for user in users:
             try:
+                # Check if user has daily ayah enabled
+                if not user.daily_ayah:
+                    logger.debug(
+                        "Daily ayah disabled for user: telegram_id=%s",
+                        user.chat_id,
+                    )
+                    continue
+
                 # Check if already sent today
                 should_send = await chat_repo.should_send_daily_ayah(user.chat_id)
 

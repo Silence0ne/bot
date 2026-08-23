@@ -8,6 +8,7 @@ from telegram.error import InvalidToken
 
 from app.api.checker import APIFeatureChecker
 from app.bot.application import create_application
+from app.bot.jobs.daily_ayah import schedule_daily_ayah
 from app.core.config import validate_runtime_settings
 from app.core.container import Container
 from app.core.logging import configure_logging
@@ -117,6 +118,10 @@ async def main() -> None:
         polling_started = True
 
         logger.info("Bot is now polling and ready to handle commands.")
+
+        # Schedule daily ayah job
+        logger.info("Scheduling daily ayah job...")
+        schedule_daily_ayah(application)
 
         # Load cache after bot is polling (in background, bot is already working)
         logger.info("Loading Quran cache in background...")
