@@ -38,7 +38,7 @@ async def send_daily_ayah_job(context) -> None:
         hour = now.hour
         minute = now.minute
 
-        logger.debug(
+        logger.info(
             "Running daily ayah job (UTC): %02d:%02d",
             hour,
             minute,

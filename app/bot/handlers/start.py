@@ -44,9 +44,11 @@ async def start(
         if user_repo:
             # Get or create user in database
             # The repository will set default timezone (Asia/Riyadh) and time (03:15) from env config
+            # Enable daily ayah by default
             await user_repo.get_or_create(
                 telegram_id=telegram_id,
                 language=language,
+                enable_daily_ayah=True,
             )
 
             logger.info("User started: telegram_id=%s", telegram_id)

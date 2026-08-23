@@ -256,4 +256,15 @@ class ChatRepository:
             )
             return False
 
-        return now_user_tz.hour == due_hour and now_user_tz.minute == due_minute
+        is_due = now_user_tz.hour == due_hour and now_user_tz.minute == due_minute
+        logger.debug(
+            "Daily ayah check: chat_id=%s, timezone=%s, user_time=%02d:%02d, due_time=%02d:%02d, is_due=%s",
+            chat.chat_id,
+            chat.timezone,
+            now_user_tz.hour,
+            now_user_tz.minute,
+            due_hour,
+            due_minute,
+            is_due,
+        )
+        return is_due
