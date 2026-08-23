@@ -64,12 +64,16 @@ async def random_ayah(
         if not container:
             logger.warning("Container not available")
             settings = get_settings()
-            await update.message.reply_text(f"{get_message('random_ayah_error')}\n\n📱 {settings.BOT_USERNAME}")
+            await update.message.reply_text(
+                f"{get_message('random_ayah_error')}\n\n📱 {settings.BOT_USERNAME}"
+            )
             return
 
         if not container.quran_cache_ready:
             settings = get_settings()
-            await update.message.reply_text(f"{get_message('random_ayah_error')}\n\n📱 {settings.BOT_USERNAME}")
+            await update.message.reply_text(
+                f"{get_message('random_ayah_error')}\n\n📱 {settings.BOT_USERNAME}"
+            )
             return
 
         ayah: Ayah = await container.provider.random_ayah()
@@ -106,7 +110,9 @@ async def random_ayah(
     except Exception as exc:
         logger.exception("Random ayah failed: %s", exc)
         settings = get_settings()
-        await update.message.reply_text(f"{get_message('random_ayah_error')}\n\n📱 {settings.BOT_USERNAME}")
+        await update.message.reply_text(
+            f"{get_message('random_ayah_error')}\n\n📱 {settings.BOT_USERNAME}"
+        )
 
 
 def get_handler() -> CommandHandler:

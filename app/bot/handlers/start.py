@@ -66,7 +66,9 @@ async def start(
     except Exception as exc:
         logger.exception("Start handler failed: error=%s", exc)
         settings = get_settings()
-        await update.message.reply_text(f"❌ An error occurred. Please try again.\n\n📱 {settings.BOT_USERNAME}")
+        await update.message.reply_text(
+            f"❌ An error occurred. Please try again.\n\n📱 {settings.BOT_USERNAME}"
+        )
 
 
 def get_handler() -> CommandHandler:

@@ -212,7 +212,9 @@ async def reload_quran_cache(
         return
 
     settings = get_settings()
-    await update.message.reply_text(f"{get_message('admin_cache_reloading', language)}\n\n📱 {settings.BOT_USERNAME}")
+    await update.message.reply_text(
+        f"{get_message('admin_cache_reloading', language)}\n\n📱 {settings.BOT_USERNAME}"
+    )
 
     reloaded = await container.reload_quran_cache()
 

@@ -80,9 +80,12 @@ async def _reply_with_page(
     # Check translation state
     show_translation = context.user_data.get("show_translation", False)
 
-    if context.application.bot_data["feature_checker"].supports(
-        MessengerFeature.INLINE_KEYBOARD
-    ) and ayahs:
+    if (
+        context.application.bot_data["feature_checker"].supports(
+            MessengerFeature.INLINE_KEYBOARD
+        )
+        and ayahs
+    ):
         reply_markup = random_page_keyboard(ayahs[0].uuid, language, show_translation)
 
     # Send as a new message, not a reply
@@ -393,9 +396,12 @@ async def _reply_with_page_translation(
         update.effective_user.language_code if update.effective_user else None
     )
 
-    if context.application.bot_data["feature_checker"].supports(
-        MessengerFeature.INLINE_KEYBOARD
-    ) and ayahs:
+    if (
+        context.application.bot_data["feature_checker"].supports(
+            MessengerFeature.INLINE_KEYBOARD
+        )
+        and ayahs
+    ):
         reply_markup = random_page_keyboard(ayahs[0].uuid, language, True)
 
     # Format page with translations
@@ -406,7 +412,9 @@ async def _reply_with_page_translation(
         first_ayah = ayahs[0]
         page_num = first_ayah.page if first_ayah.page else "?"
         if first_ayah.surah_icon:
-            parts.append(f"{first_ayah.surah_icon} *{first_ayah.surah_name}* (Page {page_num})")
+            parts.append(
+                f"{first_ayah.surah_icon} *{first_ayah.surah_name}* (Page {page_num})"
+            )
         else:
             parts.append(f"*{first_ayah.surah_name}* (Page {page_num})")
 
