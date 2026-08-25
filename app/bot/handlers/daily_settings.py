@@ -160,10 +160,6 @@ async def daily_settings(
             ],
             [
                 InlineKeyboardButton(
-                    get_message("daily_settings_back", language),
-                    callback_data="daily_back",
-                ),
-                InlineKeyboardButton(
                     get_message("main_menu_daily_settings_button", language),
                     callback_data="daily_exit",
                 ),
@@ -172,7 +168,7 @@ async def daily_settings(
 
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        await update.message.reply_text(
+        await update.callback_query.edit_message_text(
             message,
             parse_mode=ParseMode.MARKDOWN,
             reply_markup=reply_markup,
@@ -238,48 +234,6 @@ async def daily_settings_callback(
             await set_daily_type(
                 update, context, chat_repo, telegram_id, new_type, language
             )
-        elif callback_data == "daily_back":
-            # Show main settings buttons instead of closing
-            current_tz = chat.timezone or get_settings().DAILY_AYAH_DEFAULT_TIMEZONE
-            current_time = chat.daily_time or get_settings().DAILY_AYAH_DEFAULT_TIME
-            current_type = chat.daily_type or "ayah"
-
-            keyboard = [
-                [
-                    InlineKeyboardButton(
-                        get_message("daily_settings_timezone", language),
-                        callback_data="daily_tz_continent",
-                    ),
-                    InlineKeyboardButton(
-                        get_message("daily_settings_time", language),
-                        callback_data="daily_time_hour",
-                    ),
-                ],
-                [
-                    InlineKeyboardButton(
-                        get_message("daily_settings_type", language),
-                        callback_data="daily_type",
-                    ),
-                ],
-                [
-                    InlineKeyboardButton(
-                        get_message("daily_settings_back", language),
-                        callback_data="daily_back",
-                    ),
-                ],
-            ]
-
-            reply_markup = InlineKeyboardMarkup(keyboard)
-
-            await update.callback_query.edit_message_text(
-                get_message("daily_settings_current", language).format(
-                    timezone=current_tz,
-                    time=current_time,
-                    type=current_type,
-                ),
-                parse_mode=ParseMode.MARKDOWN,
-                reply_markup=reply_markup,
-            )
         elif callback_data.startswith("daily_tz_city_"):
             continent = callback_data.replace("daily_tz_city_", "")
             await show_timezone_cities(update, language, continent)
@@ -306,6 +260,7 @@ async def daily_settings_callback(
                 parse_mode=ParseMode.MARKDOWN,
                 reply_markup=main_menu_keyboard(language),
             )
+            return
 
     except Exception as exc:
         logger.exception("Daily settings callback failed: error=%s", exc)
