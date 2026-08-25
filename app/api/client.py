@@ -67,12 +67,38 @@ class APIClient:
             endpoint,
         )
 
-        response = await self._client.request(
-            method=method,
-            url=endpoint,
-            params=params,
-            json=json,
-        )
+        try:
+            response = await self._client.request(
+                method=method,
+                url=endpoint,
+                params=params,
+                json=json,
+            )
+        except (httpx.ConnectError, httpx.TimeoutException) as exc:
+            # If primary fails, try secondary if configured
+            secondary_api = getattr(self._settings, "NATIQ_SECONDARY_API", None)
+            if secondary_api and secondary_api != str(self._client.base_url):
+                logger.warning(
+                    "Primary API failed, trying secondary: %s. Error: %s",
+                    secondary_api,
+                    exc,
+                )
+                # This is a bit simplified, ideally we'd re-initialize client or just change base_url.
+                # Since client is initialized once, let's just make a direct request to the secondary.
+                async with httpx.AsyncClient(
+                    base_url=secondary_api.rstrip("/"),
+                    headers=self._settings.api_headers,
+                    timeout=self._client.timeout,
+                    follow_redirects=True,
+                ) as client:
+                    response = await client.request(
+                        method=method,
+                        url=endpoint,
+                        params=params,
+                        json=json,
+                    )
+            else:
+                raise
 
         if response.is_error:
             logger.warning(

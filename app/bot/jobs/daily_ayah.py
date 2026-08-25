@@ -25,6 +25,7 @@ async def send_daily_ayah_job(context) -> None:
     try:
         from app.core.container import Container
         from app.database.repositories.chat import ChatRepository
+        from app.bot.handlers.random_page import format_page, generate_random_page
 
         container: Container = context.application.bot_data.get("container")
         chat_repo: ChatRepository = context.application.bot_data.get("user_repository")
@@ -73,22 +74,29 @@ async def send_daily_ayah_job(context) -> None:
                     )
                     continue
 
-                # Get random ayah
-                ayah = await container.provider.random_ayah()
-                settings = get_settings()
+    # Get settings instance
+    settings = get_settings()
 
-                # Format message
-                message = (
-                    f"🌙 آیه روز (Daily Ayah)\n\n"
-                    f"﴿ {ayah.text} ﴾\n\n"
-                    f"📖 {ayah.surah_name}\n"
-                    f"آیه {ayah.ayah_number} | سوره {ayah.surah_number}"
-                )
-
-                if ayah.translation:
-                    message += f"\n\n📝 ترجمه:\n{ayah.translation}"
-
-                message += f"\n\n📱 {settings.BOT_USERNAME}"
+    # Determine if sending an ayah or a page
+    if user.daily_type == "page":
+        # Get random page
+        content = await generate_random_page(container)
+        # Use format_page from app.bot.handlers.random_page
+        message = format_page(content)
+        message += f"\n\n📱 {settings.BOT_USERNAME}"
+    else:
+        # Get random ayah
+        ayah = await container.provider.random_ayah()
+        # Format message
+        message = (
+            f"🌙 آیه روز (Daily Ayah)\n\n"
+            f"﴿ {ayah.text} ﴾\n\n"
+            f"📖 {ayah.surah_name}\n"
+            f"آیه {ayah.ayah_number} | سوره {ayah.surah_number}"
+        )
+        if ayah.translation:
+            message += f"\n\n📝 ترجمه:\n{ayah.translation}"
+        message += f"\n\n📱 {settings.BOT_USERNAME}"
 
                 # Send to user
                 await context.bot.send_message(
