@@ -447,6 +447,20 @@ class NatiqProvider:
             direction="next",
         )
 
+    async def get_ayahs_by_page(self, page_number: int) -> list[Ayah]:
+        """Get all ayahs for a specific page number."""
+        if not self._cache.ayahs:
+            raise RuntimeError("Quran cache empty")
+
+        # Optimize by filtering with list comprehension instead of loop
+        page_ayahs = [
+            self._build_ayah_from_item(ayah)
+            for ayah in self._cache.ayahs
+            if self._get_ayah_metadata(ayah).get("page") == page_number
+        ]
+
+        return page_ayahs
+
     async def _navigate_ayah(
         self,
         current_uuid: str | None = None,

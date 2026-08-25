@@ -165,10 +165,11 @@ async def _reply_admin_denied(
     )
 
     user_id = update.effective_user.id if update.effective_user else "unknown"
+    settings = get_settings()
     message = get_message("admin_access_denied", language).format(user_id=user_id)
 
     await update.message.reply_text(
-        message,
+        f"{message}\n\n📱 {settings.BOT_USERNAME}",
         reply_markup=main_menu_keyboard(language),
     )
 
@@ -203,22 +204,27 @@ async def reload_quran_cache(
 
     container = context.application.bot_data.get("container")
     if not container:
+        settings = get_settings()
         await update.message.reply_text(
-            "Service temporarily unavailable. Please try again.",
+            f"Service temporarily unavailable. Please try again.\n\n📱 {settings.BOT_USERNAME}",
             reply_markup=main_menu_keyboard(language),
         )
         return
 
-    await update.message.reply_text(get_message("admin_cache_reloading", language))
+    settings = get_settings()
+    await update.message.reply_text(
+        f"{get_message('admin_cache_reloading', language)}\n\n📱 {settings.BOT_USERNAME}"
+    )
 
     reloaded = await container.reload_quran_cache()
 
     result_key = (
         "admin_cache_reload_success" if reloaded else "admin_cache_reload_failed"
     )
+    settings = get_settings()
 
     await update.message.reply_text(
-        get_message(result_key, language),
+        f"{get_message(result_key, language)}\n\n📱 {settings.BOT_USERNAME}",
         reply_markup=main_menu_keyboard(language),
     )
 
@@ -246,17 +252,19 @@ async def admin_settings_entry(
 
     container = context.application.bot_data.get("container")
     if not container:
+        settings = get_settings()
         await update.message.reply_text(
-            "Service temporarily unavailable. Please try again.",
+            f"Service temporarily unavailable. Please try again.\n\n📱 {settings.BOT_USERNAME}",
             reply_markup=main_menu_keyboard(language),
         )
         return
 
     stats = await _get_system_stats(context)
     totals = await container.chat_repository.get_send_totals()
+    settings = get_settings()
 
     await update.message.reply_text(
-        _build_admin_dashboard(update, context, language, stats, totals),
+        f"{_build_admin_dashboard(update, context, language, stats, totals)}\n\n📱 {settings.BOT_USERNAME}",
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=main_menu_keyboard(language),
     )

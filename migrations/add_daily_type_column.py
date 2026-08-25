@@ -12,8 +12,8 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from sqlalchemy import text
-from app.database.session import Database
+from sqlalchemy import text  # noqa: E402
+from app.database.session import Database  # noqa: E402
 
 
 async def migrate():
@@ -23,26 +23,24 @@ async def migrate():
     try:
         async with db.session() as session:
             # Check if column already exists
-            result = await session.execute(
-                text("""
+            result = await session.execute(text("""
                     SELECT column_name
                     FROM information_schema.columns
                     WHERE table_name = 'chats' AND column_name = 'daily_type'
-                """)
-            )
+                """))
             exists = result.fetchone()
 
             if exists:
-                print("Column 'daily_type' already exists in chats table. Skipping migration.")
+                print(
+                    "Column 'daily_type' already exists in chats table. Skipping migration."
+                )
                 return
 
             # Add the column
-            await session.execute(
-                text("""
+            await session.execute(text("""
                     ALTER TABLE chats
                     ADD COLUMN daily_type VARCHAR(10) DEFAULT 'ayah'
-                """)
-            )
+                """))
 
             await session.commit()
             print("Successfully added 'daily_type' column to chats table.")

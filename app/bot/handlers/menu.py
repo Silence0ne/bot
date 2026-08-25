@@ -8,7 +8,6 @@ from telegram.ext import ContextTypes, MessageHandler, filters
 from app.bot.handlers.daily_settings import daily_settings
 from app.bot.handlers.random import random_ayah
 from app.bot.handlers.random_page import random_page
-from app.bot.handlers.timezone import timezone_settings
 from app.i18n import SupportedLanguage, detect_language, get_message
 
 MenuAction = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]

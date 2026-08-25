@@ -11,6 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import get_settings
 from app.core.constants import ChatType, ContentMode
 
+logger = logging.getLogger(__name__)
+
 if TYPE_CHECKING:
     from app.database.models.chat import Chat
     from app.database.session import Database
@@ -143,10 +145,21 @@ class ChatRepository:
             result = await session.execute(stmt)
             chats = list(result.scalars().all())
 
+        logger.info("Checking %d users with daily_ayah enabled", len(chats))
+
         due: list[Chat] = []
         for chat in chats:
+            logger.info(
+                "Checking user: chat_id=%s, timezone=%s, daily_time=%s, daily_ayah=%s",
+                chat.chat_id,
+                chat.timezone,
+                chat.daily_time,
+                chat.daily_ayah,
+            )
             if self._is_due_now(chat):
                 due.append(chat)
+
+        logger.info("Found %d users due for daily ayah", len(due))
         return due
 
     async def should_send_daily_ayah(self, telegram_id: int) -> bool:
@@ -256,4 +269,15 @@ class ChatRepository:
             )
             return False
 
-        return now_user_tz.hour == due_hour and now_user_tz.minute == due_minute
+        is_due = now_user_tz.hour == due_hour and now_user_tz.minute == due_minute
+        logger.debug(
+            "Daily ayah check: chat_id=%s, timezone=%s, user_time=%02d:%02d, due_time=%02d:%02d, is_due=%s",
+            chat.chat_id,
+            chat.timezone,
+            now_user_tz.hour,
+            now_user_tz.minute,
+            due_hour,
+            due_minute,
+            is_due,
+        )
+        return is_due
