@@ -1,7 +1,9 @@
 {
   "start": "Rahman ve Rahim olan Allah'ın adıyla\n\nNatiq Kur'an Botuna hoş geldiniz.\n\nBu bot Kur'an içeriğini sunmak ve göstermek için tasarlanmıştır; size çevirileriyle birlikte rastgele ayetler gönderebilir.\n\nAşağıdaki menüden doğrudan Rastgele Ayet seçebilirsiniz. Ayrıca rastgele bir ayet almak için /random ve komut listesini görmek için /help kullanabilirsiniz.",
+  "daily_ayah_header": "Günün Ayeti",
+  "ayah_label": "Ayet",
   "surah_label": "Sure",
-  "translation_label": "📝",
+  "translation_label": "Çeviri",
   "main_menu_random_button": "Rastgele Ayet",
   "main_menu_random_page_button": "Rastgele Sayfa",
   "main_menu_daily_settings_button": "⏰ Günlük Gönderim Ayarları",

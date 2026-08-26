@@ -1,7 +1,9 @@
 {
   "start": "In the name of Allah, the Most Compassionate, the Most Merciful\n\nWelcome to Natiq Quran Bot.\n\nThis bot is designed to deliver and display Quranic content and can send you random ayahs together with their translations.\n\nUse the menu below to choose Random Ayah directly. You can also use /random to receive a random ayah and /help to view the command list.",
+  "daily_ayah_header": "Daily Ayah",
+  "ayah_label": "Ayah",
   "surah_label": "Surah",
-  "translation_label": "📝",
+  "translation_label": "Translation",
   "main_menu_random_button": "Random Ayah",
   "main_menu_random_page_button": "Random Page",
   "main_menu_daily_settings_button": "⏰ Daily Send Settings",
