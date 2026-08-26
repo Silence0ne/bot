@@ -75,8 +75,8 @@ async def send_daily_ayah_job(context) -> None:
                     )
                     continue
 
-                                # Get settings instance
-                                settings = get_settings()
+                # Get settings instance
+                settings = get_settings()
 
                 # Determine if sending an ayah or a page
                 if user.daily_type == "page":
