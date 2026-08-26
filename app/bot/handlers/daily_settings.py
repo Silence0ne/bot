@@ -168,11 +168,18 @@ async def daily_settings(
 
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        await update.callback_query.edit_message_text(
-            message,
-            parse_mode=ParseMode.MARKDOWN,
-            reply_markup=reply_markup,
-        )
+        if update.callback_query:
+            await update.callback_query.edit_message_text(
+                message,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=reply_markup,
+            )
+        else:
+            await update.message.reply_text(
+                message,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=reply_markup,
+            )
 
     except Exception as exc:
         logger.exception("Daily settings handler failed: error=%s", exc)
