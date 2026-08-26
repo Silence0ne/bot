@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from telegram.ext import Application, JobQueue
 
 from app.core.config import get_settings
+from app.i18n import get_message
 
 logger = logging.getLogger(__name__)
 
@@ -74,8 +75,8 @@ async def send_daily_ayah_job(context) -> None:
                     )
                     continue
 
-                # Get settings instance
-                settings = get_settings()
+                                # Get settings instance
+                                settings = get_settings()
 
                 # Determine if sending an ayah or a page
                 if user.daily_type == "page":
