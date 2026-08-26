@@ -1,7 +1,9 @@
 {
   "start": "Allahın adı ilə, Ən Rəhmli, Ən Mehriban\n\nNatiq Quran Botuna xoş gəlmisiniz.\n\nBu bot Quran mətnini çatdırmaq və göstərmək üçün nəzərdə tutulub və sizə təsadüfi ayələri onların tərcümələri ilə birlikdə göndərə bilər.\n\nAşağıdakı menyudan istifadə edərək birbaşa Random Aya seçə bilərsiniz. Rastgele ayə almaq üçün /random, əmrlərin siyahısına baxmaq üçün isə /help istifadə edin.",
+  "daily_ayah_header": "Günün Ayəsi",
+  "ayah_label": "Ayə",
   "surah_label": "Sura",
-  "translation_label": "📝",
+  "translation_label": "Tərcümə",
   "main_menu_random_button": "Təsadüfi Ayə",
   "main_menu_random_page_button": "Təsadüfi Səhifə",
   "main_menu_daily_settings_button": "⏰ Gündəlik Göndərmə Ayarları",

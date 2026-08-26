@@ -42,25 +42,18 @@ def format_page(ayahs: list[Ayah]) -> str:
     if ayahs:
         first_ayah = ayahs[0]
         page_num = first_ayah.page if first_ayah.page else "?"
-        if first_ayah.surah_icon:
-            parts.append(
-                f"{first_ayah.surah_icon} *{first_ayah.surah_name}* (Page {page_num})"
-            )
-        else:
-            parts.append(f"*{first_ayah.surah_name}* (Page {page_num})")
-
-        # Bismillah (shown before the first ayah when applicable)
-        if first_ayah.show_bismillah_line and first_ayah.bismillah_text:
-            parts.append(first_ayah.bismillah_text)
-            parts.append("")  # Add spacing after bismillah
+        icon = first_ayah.surah_icon if first_ayah.surah_icon else "🕋"
+        parts.append(f"{icon} *{first_ayah.surah_name}* (Page {page_num})")
+        parts.append("")
 
     # Format each ayah in the page with better spacing
     for i, ayah in enumerate(ayahs):
-        # Add a separator between ayahs (except first)
-        if i > 0:
-            parts.append("─" * 10)  # Visual separator
-
         parts.append(f"📖 *{ayah.text} ﴿{ayah.ayah_number}﴾*")
+        parts.append("──────────")
+
+    # Remove the last separator
+    if parts:
+        parts.pop()
 
     # Attribution
     parts.append("")

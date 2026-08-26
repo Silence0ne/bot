@@ -89,14 +89,12 @@ async def send_daily_ayah_job(context) -> None:
                     ayah = await container.provider.random_ayah()
                     # Format message
                     message = (
-                        f"🌙 آیه روز (Daily Ayah)\n\n"
-                        f"﴿ {ayah.text} ﴾\n\n"
-                        f"📖 {ayah.surah_name}\n"
-                        f"آیه {ayah.ayah_number} | سوره {ayah.surah_number}"
+                        f"🕋 *{ayah.surah_name}*\n\n"
+                        f"📖 *{ayah.text} ﴿{ayah.ayah_number}﴾*\n\n"
                     )
                     if ayah.translation:
-                        message += f"\n\n📝 ترجمه:\n{ayah.translation}"
-                    message += f"\n\n📱 {settings.BOT_USERNAME}"
+                        message += f"📝 {ayah.translation} ({ayah.ayah_number})\n\n"
+                    message += f"📱 {settings.BOT_USERNAME}"
 
                 # Send to user
                 await context.bot.send_message(

@@ -47,19 +47,12 @@ async def _reply_with_ayah(
     ):
         reply_markup = random_ayah_keyboard(ayah.uuid, language)
 
-    # Send as edit if possible
-    try:
-        await message.edit_text(
-            text=format_ayah(ayah),
-            parse_mode=ParseMode.MARKDOWN,
-            reply_markup=reply_markup,
-        )
-    except Exception:
-        await message.reply_text(
-            text=format_ayah(ayah),
-            parse_mode=ParseMode.MARKDOWN,
-            reply_markup=reply_markup,
-        )
+    # Send as new message
+    await message.reply_text(
+        text=format_ayah(ayah),
+        parse_mode=ParseMode.MARKDOWN,
+        reply_markup=reply_markup,
+    )
 
 
 async def _reply_with_page(
@@ -95,19 +88,12 @@ async def _reply_with_page(
     ):
         reply_markup = random_page_keyboard(ayahs[0].uuid, language, show_translation)
 
-    # Send as edit if possible
-    try:
-        await message.edit_text(
-            text=format_page(ayahs),
-            parse_mode=ParseMode.MARKDOWN,
-            reply_markup=reply_markup,
-        )
-    except Exception:
-        await message.reply_text(
-            text=format_page(ayahs),
-            parse_mode=ParseMode.MARKDOWN,
-            reply_markup=reply_markup,
-        )
+    # Send as new message
+    await message.reply_text(
+        text=format_page(ayahs),
+        parse_mode=ParseMode.MARKDOWN,
+        reply_markup=reply_markup,
+    )
 
 
 async def _handle_next_ayah(
@@ -448,19 +434,12 @@ async def _reply_with_page_translation(
     parts.append("")
     parts.append(f"📱 {settings.BOT_USERNAME}")
 
-    # Send as edit if possible
-    try:
-        await message.edit_text(
-            text="\n".join(parts),
-            parse_mode=ParseMode.MARKDOWN,
-            reply_markup=reply_markup,
-        )
-    except Exception:
-        await message.reply_text(
-            text="\n".join(parts),
-            parse_mode=ParseMode.MARKDOWN,
-            reply_markup=reply_markup,
-        )
+    # Send as new message
+    await message.reply_text(
+        text="\n".join(parts),
+        parse_mode=ParseMode.MARKDOWN,
+        reply_markup=reply_markup,
+    )
 
 
 def get_callback_handlers() -> list[CallbackQueryHandler]:
