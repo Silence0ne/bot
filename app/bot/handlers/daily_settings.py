@@ -144,7 +144,7 @@ async def daily_settings(
         keyboard = [
             [
                 InlineKeyboardButton(
-                    get_message("daily_settings_type", language),
+                    f"{get_message('daily_settings_type', language)}: {current_type.upper()}",
                     callback_data="daily_type",
                 ),
             ],
@@ -253,10 +253,9 @@ async def daily_settings_callback(
             await daily_settings(update, context)
         elif callback_data == "daily_exit":
             # Exit daily settings and show main menu
+            settings = get_settings()
             await update.callback_query.edit_message_text(
-                get_message("start", language).format(
-                    bot_username=get_settings().BOT_USERNAME
-                ),
+                f"{get_message('start', language)}\n\n📱 {settings.BOT_USERNAME}",
                 parse_mode=ParseMode.MARKDOWN,
                 reply_markup=main_menu_keyboard(language),
             )
@@ -283,15 +282,12 @@ async def show_timezone_continents(update: Update, language: str) -> None:
                 )
             ]
         )
+    # Continent selection footer
     keyboard.append(
         [
             InlineKeyboardButton(
                 get_message("daily_settings_back", language),
                 callback_data="daily_back",
-            ),
-            InlineKeyboardButton(
-                get_message("main_menu_daily_settings_button", language),
-                callback_data="daily_exit",
             ),
         ]
     )
@@ -335,10 +331,6 @@ async def show_timezone_cities(
                 get_message("daily_settings_back", language),
                 callback_data="daily_tz_continent",
             ),
-            InlineKeyboardButton(
-                get_message("main_menu_daily_settings_button", language),
-                callback_data="daily_exit",
-            ),
         ]
     )
 
@@ -364,19 +356,21 @@ async def set_timezone(
         await chat_repo.update_preferences(telegram_id=telegram_id, timezone=timezone)
 
         settings = get_settings()
+        # Show main settings panel
         await daily_settings(update, context)
 
         logger.info(
             "User timezone updated: telegram_id=%s, timezone=%s", telegram_id, timezone
         )
-
     except Exception as e:
         logger.warning("Invalid timezone: timezone=%s, error=%s", timezone, e)
-        settings = get_settings()
-        await update.callback_query.edit_message_text(
-            f"{get_message('timezone_set_error', language)}\n\n📱 {settings.BOT_USERNAME}",
-            reply_markup=main_menu_keyboard(language),
-        )
+        # Use existing message or send error message
+        if update.callback_query:
+            settings = get_settings()
+            await update.callback_query.answer(
+                get_message("timezone_set_error", language),
+                show_alert=True
+            )
 
 
 async def show_time_hour_selection(update: Update, language: str) -> None:
@@ -398,15 +392,11 @@ async def show_time_hour_selection(update: Update, language: str) -> None:
                 get_message("daily_settings_back", language),
                 callback_data="daily_back",
             ),
-            InlineKeyboardButton(
-                get_message("main_menu_daily_settings_button", language),
-                callback_data="daily_exit",
-            ),
         ]
     )
 
     await update.callback_query.edit_message_text(
-        get_message("daily_settings_select_hour", language),
+        get_message("daily_settings_select_continent", language),
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
 
@@ -428,21 +418,18 @@ async def show_time_minute_selection(
         )
         keyboard.append(row)
 
+    # Show hour selection footer
     keyboard.append(
         [
             InlineKeyboardButton(
                 get_message("daily_settings_back", language),
-                callback_data="daily_time_hour",
-            ),
-            InlineKeyboardButton(
-                get_message("main_menu_daily_settings_button", language),
-                callback_data="daily_exit",
+                callback_data="daily_back",
             ),
         ]
     )
 
     await update.callback_query.edit_message_text(
-        get_message("daily_settings_select_minute", language).format(hour=hour),
+        get_message("daily_settings_select_hour", language),
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
 
@@ -471,11 +458,11 @@ async def set_time(
 
     except Exception as e:
         logger.exception("Failed to set time: time=%s, error=%s", time, e)
-        settings = get_settings()
-        await update.callback_query.edit_message_text(
-            f"{get_message('time_set_error', language)}\n\n📱 {settings.BOT_USERNAME}",
-            reply_markup=main_menu_keyboard(language),
-        )
+        if update.callback_query:
+            await update.callback_query.answer(
+                get_message("time_set_error", language),
+                show_alert=True
+            )
 
 
 async def set_daily_type(
@@ -504,8 +491,8 @@ async def set_daily_type(
 
     except Exception as e:
         logger.exception("Failed to set daily type: type=%s, error=%s", daily_type, e)
-        settings = get_settings()
-        await update.callback_query.edit_message_text(
-            f"{get_message('daily_type_set_error', language)}\n\n📱 {settings.BOT_USERNAME}",
-            reply_markup=main_menu_keyboard(language),
-        )
+        if update.callback_query:
+            await update.callback_query.answer(
+                get_message("daily_type_set_error", language),
+                show_alert=True
+            )
