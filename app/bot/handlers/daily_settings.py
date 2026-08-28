@@ -150,11 +150,11 @@ async def daily_settings(
             ],
             [
                 InlineKeyboardButton(
-                    get_message("daily_settings_timezone", language),
+                    f"{get_message('daily_settings_timezone', language)}: {current_tz}",
                     callback_data="daily_tz_continent",
                 ),
                 InlineKeyboardButton(
-                    get_message("daily_settings_time", language),
+                    f"{get_message('daily_settings_time', language)}: {current_time}",
                     callback_data="daily_time_hour",
                 ),
             ],
