@@ -355,7 +355,7 @@ async def set_timezone(
 
         await chat_repo.update_preferences(telegram_id=telegram_id, timezone=timezone)
 
-        settings = get_settings()
+        get_settings()
         # Show main settings panel
         await daily_settings(update, context)
 
@@ -366,10 +366,9 @@ async def set_timezone(
         logger.warning("Invalid timezone: timezone=%s, error=%s", timezone, e)
         # Use existing message or send error message
         if update.callback_query:
-            settings = get_settings()
+            get_settings()
             await update.callback_query.answer(
-                get_message("timezone_set_error", language),
-                show_alert=True
+                get_message("timezone_set_error", language), show_alert=True
             )
 
 
@@ -447,7 +446,7 @@ async def set_time(
         await chat_repo.update_preferences(telegram_id=telegram_id, daily_time=time)
 
         # Get updated chat to show current settings
-        chat = await chat_repo.get_by_telegram_id(telegram_id)
+        await chat_repo.get_by_telegram_id(telegram_id)
 
         # Show main settings panel with updated time
         await daily_settings(update, context)
@@ -460,8 +459,7 @@ async def set_time(
         logger.exception("Failed to set time: time=%s, error=%s", time, e)
         if update.callback_query:
             await update.callback_query.answer(
-                get_message("time_set_error", language),
-                show_alert=True
+                get_message("time_set_error", language), show_alert=True
             )
 
 
@@ -480,7 +478,7 @@ async def set_daily_type(
         )
 
         # Get updated chat to show current settings
-        chat = await chat_repo.get_by_telegram_id(telegram_id)
+        await chat_repo.get_by_telegram_id(telegram_id)
 
         # Show main settings panel
         await daily_settings(update, context)
@@ -493,6 +491,5 @@ async def set_daily_type(
         logger.exception("Failed to set daily type: type=%s, error=%s", daily_type, e)
         if update.callback_query:
             await update.callback_query.answer(
-                get_message("daily_type_set_error", language),
-                show_alert=True
+                get_message("daily_type_set_error", language), show_alert=True
             )
