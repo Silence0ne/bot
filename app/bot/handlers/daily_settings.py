@@ -395,7 +395,7 @@ async def show_time_hour_selection(update: Update, language: str) -> None:
     )
 
     await update.callback_query.edit_message_text(
-        get_message("daily_settings_select_continent", language),
+        get_message("daily_settings_select_hour", language),
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
 

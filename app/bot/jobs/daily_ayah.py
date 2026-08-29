@@ -74,6 +74,9 @@ async def send_daily_ayah_job(context) -> None:
                     )
                     continue
 
+                log_surah: int = -1
+                log_ayah: int = -1
+
                 # Get settings instance
                 settings = get_settings()
 
@@ -87,6 +90,8 @@ async def send_daily_ayah_job(context) -> None:
                 else:
                     # Get random ayah
                     ayah = await container.provider.random_ayah()
+                    log_surah = ayah.surah_number
+                    log_ayah = ayah.ayah_number
                     # Format message
                     message = (
                         f"🕋 *{ayah.surah_name}*\n\n"
@@ -106,10 +111,11 @@ async def send_daily_ayah_job(context) -> None:
                 await chat_repo.mark_daily_ayah_sent(user.chat_id)
 
                 logger.info(
-                    "Sent daily ayah: telegram_id=%s, surah=%d, ayah=%d",
+                    "Sent daily ayah: telegram_id=%s, type=%s, surah=%d, ayah=%d",
                     user.chat_id,
-                    ayah.surah_number,
-                    ayah.ayah_number,
+                    user.daily_type,
+                    log_surah,
+                    log_ayah,
                 )
 
             except Exception as exc:
