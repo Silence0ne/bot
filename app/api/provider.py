@@ -447,6 +447,23 @@ class NatiqProvider:
             direction="next",
         )
 
+    async def random_page(self) -> list[Ayah]:
+        """Return all ayahs from a random Quran page."""
+        if not self._cache.ayahs:
+            raise RuntimeError("Quran cache empty")
+
+        page_numbers = {
+            self._get_ayah_metadata(ayah).get("page")
+            for ayah in self._cache.ayahs
+            if self._get_ayah_metadata(ayah).get("page") is not None
+        }
+
+        if not page_numbers:
+            return []
+
+        page_number = random.choice(sorted(page_numbers))
+        return await self.get_ayahs_by_page(page_number)
+
     async def get_ayahs_by_page(self, page_number: int) -> list[Ayah]:
         """Get all ayahs for a specific page number."""
         if not self._cache.ayahs:
