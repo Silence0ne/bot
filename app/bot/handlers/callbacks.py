@@ -225,11 +225,11 @@ async def _handle_next_page(
         # Get ayahs for the next page
         page_ayahs = await container.provider.get_ayahs_by_page(next_page)
 
-        # If no ayahs found for this page, generate a random page instead
+        # If no ayahs found for this page, fall back to a random page
         if not page_ayahs:
             page_ayahs = await generate_random_page(container)
-            # Reset to random page mode
-            context.user_data["current_page"] = None
+            if page_ayahs:
+                context.user_data["current_page"] = page_ayahs[0].page
         else:
             # Update current page in user data
             context.user_data["current_page"] = next_page
