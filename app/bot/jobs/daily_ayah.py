@@ -5,7 +5,10 @@ from datetime import datetime, timezone
 
 from telegram.ext import Application, JobQueue
 
+from app.api.checker import MessengerFeature
 from app.core.config import get_settings
+from app.i18n import detect_language
+from app.ui.keyboards.random import random_page_keyboard
 
 logger = logging.getLogger(__name__)
 
@@ -81,12 +84,28 @@ async def send_daily_ayah_job(context) -> None:
                 settings = get_settings()
 
                 # Determine if sending an ayah or a page
+                reply_markup = None
+
                 if user.daily_type == "page":
                     # Get random page
                     content = await generate_random_page(container)
-                    # Use format_page from app.bot.handlers.random_page
+                    # format_page already appends the bot attribution line
                     message = format_page(content)
-                    message += f"\n\n📱 {settings.BOT_USERNAME}"
+
+                    # Attach the same inline keyboard as the random page
+                    # (Next Page / Translation toggle).
+                    if (
+                        content
+                        and context.application.bot_data["feature_checker"].supports(
+                            MessengerFeature.INLINE_KEYBOARD
+                        )
+                    ):
+                        language = detect_language(user.language)
+                        reply_markup = random_page_keyboard(
+                            content[0].uuid,
+                            language,
+                            False,
+                        )
                 else:
                     # Get random ayah
                     ayah = await container.provider.random_ayah()
@@ -105,6 +124,7 @@ async def send_daily_ayah_job(context) -> None:
                 await context.bot.send_message(
                     chat_id=user.chat_id,
                     text=message,
+                    reply_markup=reply_markup,
                 )
 
                 # Mark as sent

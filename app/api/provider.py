@@ -129,48 +129,49 @@ class NatiqProvider:
         if not uuids:
             return []
 
-        # Choose strategy: use first UUID only (matches your earlier behavior).
-        # If you want to load all UUIDs, tell me and I'll adjust.
-        takhtit_uuid = uuids[0]
-        logger.info("Using takhtit_uuid=%s", takhtit_uuid)
-
+        # Takhtits may cover only part of the Quran each, so all of them must
+        # be merged to build complete page/juz metadata for every ayah.
         results: list[dict[str, Any]] = []
         seen: set[str] = set()
 
-        offset = 0
-        limit = 200
+        for takhtit_uuid in uuids:
+            offset = 0
+            limit = 200
 
-        while True:
-            response = await self._get_with_retry(
-                f"/takhtits/{takhtit_uuid}/ayahs_breakers/",
-                params={"offset": offset, "limit": limit},
-            )
+            while True:
+                response = await self._get_with_retry(
+                    f"/takhtits/{takhtit_uuid}/ayahs_breakers/",
+                    params={"offset": offset, "limit": limit},
+                )
 
-            items = self._extract_list(response.json())
-            if not items:
-                break
+                items = self._extract_list(response.json())
+                if not items:
+                    break
 
-            added = 0
-            for item in items:
-                item_uuid = item.get("uuid")
-                if isinstance(item_uuid, str) and item_uuid:
-                    if item_uuid in seen:
-                        continue
-                    seen.add(item_uuid)
+                added = 0
+                for item in items:
+                    item_uuid = item.get("uuid")
+                    if isinstance(item_uuid, str) and item_uuid:
+                        if item_uuid in seen:
+                            continue
+                        seen.add(item_uuid)
 
-                results.append(item)
-                added += 1
+                    results.append(item)
+                    added += 1
 
-            logger.info("Loaded %s takhtits", len(results))
+                logger.info("Loaded %s takhtits", len(results))
 
-            if added == 0:
-                logger.warning("Repeated takhtit page detected")
-                break
+                if added == 0:
+                    logger.warning(
+                        "Repeated takhtit page detected for uuid=%s",
+                        takhtit_uuid,
+                    )
+                    break
 
-            if len(items) < limit:
-                break
+                if len(items) < limit:
+                    break
 
-            offset += len(items)
+                offset += len(items)
 
         logger.info("Finished loading %s takhtits", len(results))
         return results
@@ -263,10 +264,43 @@ class NatiqProvider:
     def _get_ayah_metadata(self, ayah: dict[str, Any]) -> dict[str, Any]:
         ayah_uuid = ayah.get("uuid")
 
-        if not ayah_uuid:
-            return {}
+        if ayah_uuid:
+            metadata = self._cache.takhtit_map.get(ayah_uuid)
+            if metadata:
+                return metadata
 
-        return self._cache.takhtit_map.get(ayah_uuid, {})
+        # Fall back to the position data embedded in the ayah itself
+        # (breakers + surah object) so page lookups never go empty.
+        return self._extract_ayah_breakers(ayah)
+
+    @staticmethod
+    def _extract_ayah_breakers(ayah: dict[str, Any]) -> dict[str, Any]:
+        metadata: dict[str, Any] = {}
+
+        number = ayah.get("number")
+        if number is not None:
+            metadata["ayah"] = number
+
+        surah = ayah.get("surah")
+        if isinstance(surah, dict):
+            if surah.get("uuid"):
+                metadata["surah_uuid"] = surah["uuid"]
+            if surah.get("number") is not None:
+                metadata["surah"] = surah["number"]
+
+        breakers = ayah.get("breakers")
+        if isinstance(breakers, list):
+            for breaker in breakers:
+                if not isinstance(breaker, dict):
+                    continue
+
+                name = breaker.get("name")
+                value = breaker.get("number")
+
+                if name in {"page", "juz", "hizb", "ruku", "manzil"} and value is not None:
+                    metadata[name] = int(value)
+
+        return metadata
 
     def _resolve_surah(self, metadata: dict[str, Any]) -> dict[str, Any]:
         surah_uuid = metadata.get("surah_uuid")
