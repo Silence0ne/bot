@@ -219,7 +219,7 @@ async def _handle_next_page(
             return
 
         # Get current page from user data, or start from page 1
-        current_page = context.user_data.get("current_page", 1)
+        current_page = context.user_data.get("current_page") or 1
         next_page = current_page + 1
 
         # Get ayahs for the next page
@@ -294,7 +294,18 @@ async def _handle_page_translation(
         # Set translation state for this user
         context.user_data["show_translation"] = True
 
-        page_ayahs = await generate_random_page(container)
+        # Re-render the SAME page currently on screen with translations,
+        # instead of generating a brand-new random page.
+        first_ayah_uuid = query.data.split(":")[1]
+        page_ayahs = await container.provider.get_ayahs_by_first_ayah_uuid(
+            first_ayah_uuid
+        )
+
+        if not page_ayahs:
+            page_ayahs = await generate_random_page(container)
+
+        if page_ayahs:
+            context.user_data["current_page"] = page_ayahs[0].page
 
         # Track in database
         if update.effective_user and page_ayahs:
@@ -346,7 +357,18 @@ async def _handle_page_no_translation(
         # Reset translation state for this user
         context.user_data["show_translation"] = False
 
-        page_ayahs = await generate_random_page(container)
+        # Re-render the SAME page currently on screen without translations,
+        # instead of generating a brand-new random page.
+        first_ayah_uuid = query.data.split(":")[1]
+        page_ayahs = await container.provider.get_ayahs_by_first_ayah_uuid(
+            first_ayah_uuid
+        )
+
+        if not page_ayahs:
+            page_ayahs = await generate_random_page(container)
+
+        if page_ayahs:
+            context.user_data["current_page"] = page_ayahs[0].page
 
         # Track in database
         if update.effective_user and page_ayahs:

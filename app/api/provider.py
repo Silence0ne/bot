@@ -478,6 +478,24 @@ class NatiqProvider:
 
         return page_ayahs
 
+    async def get_ayahs_by_first_ayah_uuid(self, ayah_uuid: str) -> list[Ayah]:
+        """Get all ayahs for the page identified by the uuid of its first ayah."""
+        if not self._cache.ayahs:
+            raise RuntimeError("Quran cache empty")
+
+        for ayah in self._cache.ayahs:
+            if ayah.get("uuid") != ayah_uuid:
+                continue
+
+            page = self._get_ayah_metadata(ayah).get("page")
+
+            if page is not None:
+                return await self.get_ayahs_by_page(page)
+
+            break
+
+        return []
+
     async def _navigate_ayah(
         self,
         current_uuid: str | None = None,
