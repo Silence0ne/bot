@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import random
 from typing import TYPE_CHECKING
 
 from telegram import Update
@@ -22,15 +21,8 @@ logger = logging.getLogger(__name__)
 
 
 async def generate_random_page(container: Container) -> list[Ayah]:
-    """Generate a random page with 10-15 ayahs."""
-    ayah_count = random.randint(10, 15)
-    page_ayahs: list[Ayah] = []
-
-    for _ in range(ayah_count):
-        ayah: Ayah = await container.provider.random_ayah()
-        page_ayahs.append(ayah)
-
-    return page_ayahs
+    """Generate a random page by selecting a random Quran page."""
+    return await container.provider.random_page()
 
 
 def format_page(ayahs: list[Ayah]) -> str:

@@ -269,15 +269,25 @@ class ChatRepository:
             )
             return False
 
-        is_due = now_user_tz.hour == due_hour and now_user_tz.minute == due_minute
+        # Accept sends within a short window after the scheduled minute.
+        # The job polls every 60s and the exact-minute match was unreliable:
+        # any delay (slow network, DB query time, job offset) caused users to
+        # be skipped entirely for the day. `last_daily_sent_date` guards
+        # against duplicates, so this window is safe.
+        due = now_user_tz.replace(
+            hour=due_hour, minute=due_minute, second=0, microsecond=0
+        )
+        elapsed = (now_user_tz - due).total_seconds()
+        is_due = 0 <= elapsed < 120
         logger.debug(
-            "Daily ayah check: chat_id=%s, timezone=%s, user_time=%02d:%02d, due_time=%02d:%02d, is_due=%s",
+            "Daily ayah check: chat_id=%s, timezone=%s, user_time=%02d:%02d, due_time=%02d:%02d, elapsed_seconds=%s, is_due=%s",
             chat.chat_id,
             chat.timezone,
             now_user_tz.hour,
             now_user_tz.minute,
             due_hour,
             due_minute,
+            round(elapsed, 1),
             is_due,
         )
         return is_due
