@@ -274,7 +274,9 @@ class ChatRepository:
         # any delay (slow network, DB query time, job offset) caused users to
         # be skipped entirely for the day. `last_daily_sent_date` guards
         # against duplicates, so this window is safe.
-        due = now_user_tz.replace(hour=due_hour, minute=due_minute, second=0, microsecond=0)
+        due = now_user_tz.replace(
+            hour=due_hour, minute=due_minute, second=0, microsecond=0
+        )
         elapsed = (now_user_tz - due).total_seconds()
         is_due = 0 <= elapsed < 120
         logger.debug(
