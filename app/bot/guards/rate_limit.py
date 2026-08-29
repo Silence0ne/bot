@@ -9,6 +9,7 @@ from inspect import isawaitable
 from typing import Protocol
 
 from telegram import Update
+from telegram.error import BadRequest
 from telegram.ext import ContextTypes
 
 from app.core.config import get_settings
@@ -111,10 +112,17 @@ async def _reply_rate_limited(
     message_with_username = f"{message}\n\n📱 {settings.BOT_USERNAME}"
 
     if update.callback_query is not None:
-        await update.callback_query.answer(
-            message_with_username,
-            show_alert=False,
-        )
+        try:
+            await update.callback_query.answer(
+                message_with_username,
+                show_alert=False,
+            )
+        except BadRequest:
+            # Query already answered or expired; fall back to editing the message.
+            try:
+                await update.callback_query.edit_message_text(message_with_username)
+            except BadRequest:
+                pass
         return
 
     if update.message is not None:
