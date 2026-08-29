@@ -94,12 +94,9 @@ async def send_daily_ayah_job(context) -> None:
 
                     # Attach the same inline keyboard as the random page
                     # (Next Page / Translation toggle).
-                    if (
-                        content
-                        and context.application.bot_data["feature_checker"].supports(
-                            MessengerFeature.INLINE_KEYBOARD
-                        )
-                    ):
+                    if content and context.application.bot_data[
+                        "feature_checker"
+                    ].supports(MessengerFeature.INLINE_KEYBOARD):
                         language = detect_language(user.language)
                         reply_markup = random_page_keyboard(
                             content[0].uuid,

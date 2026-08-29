@@ -297,7 +297,10 @@ class NatiqProvider:
                 name = breaker.get("name")
                 value = breaker.get("number")
 
-                if name in {"page", "juz", "hizb", "ruku", "manzil"} and value is not None:
+                if (
+                    name in {"page", "juz", "hizb", "ruku", "manzil"}
+                    and value is not None
+                ):
                     metadata[name] = int(value)
 
         return metadata

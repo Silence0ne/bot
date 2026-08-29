@@ -153,17 +153,17 @@ async def _render_daily_settings(
     keyboard = [
         [
             InlineKeyboardButton(
-                get_message('daily_settings_type', language),
+                get_message("daily_settings_type", language),
                 callback_data="daily_type",
             ),
         ],
         [
             InlineKeyboardButton(
-                get_message('daily_settings_timezone', language),
+                get_message("daily_settings_timezone", language),
                 callback_data="daily_tz_continent",
             ),
             InlineKeyboardButton(
-                get_message('daily_settings_time', language),
+                get_message("daily_settings_time", language),
                 callback_data="daily_time_hour",
             ),
         ],
