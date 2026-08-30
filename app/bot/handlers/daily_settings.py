@@ -10,6 +10,7 @@ from telegram.ext import ContextTypes
 from zoneinfo import ZoneInfo
 
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
+from app.bot.jobs.daily_ayah import schedule_user_daily_ayah
 from app.core.config import get_settings
 from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
@@ -409,6 +410,10 @@ async def set_timezone(
 
         await chat_repo.update_preferences(telegram_id=telegram_id, timezone=timezone)
 
+        chat = await chat_repo.get_by_telegram_id(telegram_id)
+        if chat is not None:
+            schedule_user_daily_ayah(context.application, chat)
+
         get_settings()
         # Show main settings panel
         await _render_daily_settings(update, context, language)
@@ -501,10 +506,10 @@ async def set_time(
 ) -> None:
     """Set user's daily sending time."""
     try:
-        await chat_repo.update_preferences(telegram_id=telegram_id, daily_time=time)
+        chat = await chat_repo.update_preferences(telegram_id=telegram_id, daily_time=time)
 
-        # Get updated chat to show current settings
-        await chat_repo.get_by_telegram_id(telegram_id)
+        if chat is not None:
+            schedule_user_daily_ayah(context.application, chat)
 
         # Show main settings panel with updated time
         await _render_daily_settings(update, context, language)
@@ -533,12 +538,12 @@ async def set_daily_type(
 ) -> None:
     """Set user's daily content type."""
     try:
-        await chat_repo.update_preferences(
+        chat = await chat_repo.update_preferences(
             telegram_id=telegram_id, daily_type=daily_type
         )
 
-        # Get updated chat to show current settings
-        await chat_repo.get_by_telegram_id(telegram_id)
+        if chat is not None:
+            schedule_user_daily_ayah(context.application, chat)
 
         # Show main settings panel
         await _render_daily_settings(update, context, language)

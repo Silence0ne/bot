@@ -6,6 +6,7 @@ from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes
 
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
+from app.bot.jobs.daily_ayah import schedule_user_daily_ayah
 from app.core.config import get_settings
 from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
@@ -45,11 +46,14 @@ async def start(
             # Get or create user in database
             # The repository will set default timezone (Asia/Riyadh) and time (03:15) from env config
             # Enable daily ayah by default
-            await user_repo.get_or_create(
+            chat = await user_repo.get_or_create(
                 telegram_id=telegram_id,
                 language=language,
                 enable_daily_ayah=True,
             )
+
+            if chat is not None:
+                schedule_user_daily_ayah(context.application, chat)
 
             logger.info("User started: telegram_id=%s", telegram_id)
         else:

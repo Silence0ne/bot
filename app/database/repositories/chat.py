@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime, timezone
+from datetime import date, datetime
 from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
@@ -137,7 +137,7 @@ class ChatRepository:
             await session.refresh(chat)
             return chat
 
-    async def list_due_for_daily_ayah(self) -> list["Chat"]:
+    async def list_daily_ayah_enabled(self) -> list["Chat"]:
         from app.database.models.chat import Chat
 
         async with self._database.session() as session:
@@ -145,22 +145,8 @@ class ChatRepository:
             result = await session.execute(stmt)
             chats = list(result.scalars().all())
 
-        logger.info("Checking %d users with daily_ayah enabled", len(chats))
-
-        due: list[Chat] = []
-        for chat in chats:
-            logger.info(
-                "Checking user: chat_id=%s, timezone=%s, daily_time=%s, daily_ayah=%s",
-                chat.chat_id,
-                chat.timezone,
-                chat.daily_time,
-                chat.daily_ayah,
-            )
-            if self._is_due_now(chat):
-                due.append(chat)
-
-        logger.info("Found %d users due for daily ayah", len(due))
-        return due
+        logger.info("Found %d users with daily_ayah enabled", len(chats))
+        return chats
 
     async def should_send_daily_ayah(self, telegram_id: int) -> bool:
         chat = await self.get_by_telegram_id(telegram_id)
@@ -232,62 +218,3 @@ class ChatRepository:
         except Exception:
             tz = ZoneInfo("UTC")
         return datetime.now(tz).date()
-
-    @classmethod
-    def _is_due_now(cls, chat: "Chat") -> bool:
-        """
-        Check if daily ayah is due for this user.
-
-        Logic:
-        1. Get current UTC time (hardcoded Greenwich base)
-        2. Convert UTC time to user's timezone
-        3. Check if converted time matches user's daily_time setting
-
-        This allows:
-        - Job runs in UTC (hardcoded)
-        - Default config uses Riyadh timezone with 03:15 time
-        - Users can set their own timezone and preferred time
-        """
-        settings = get_settings()
-        try:
-            tz = ZoneInfo(chat.timezone or settings.DAILY_AYAH_DEFAULT_TIMEZONE)
-        except Exception:
-            tz = ZoneInfo("UTC")
-
-        # Get current time in UTC (hardcoded Greenwich)
-        now_utc = datetime.now(timezone.utc)
-        # Convert to user's timezone
-        now_user_tz = now_utc.astimezone(tz)
-
-        try:
-            hour_str, minute_str = chat.daily_time.split(":", 1)
-            due_hour = int(hour_str)
-            due_minute = int(minute_str)
-        except ValueError:
-            logger.warning(
-                "Invalid daily_time for chat_id=%s: %s", chat.chat_id, chat.daily_time
-            )
-            return False
-
-        # Accept sends within a short window after the scheduled minute.
-        # The job polls every 60s and the exact-minute match was unreliable:
-        # any delay (slow network, DB query time, job offset) caused users to
-        # be skipped entirely for the day. `last_daily_sent_date` guards
-        # against duplicates, so this window is safe.
-        due = now_user_tz.replace(
-            hour=due_hour, minute=due_minute, second=0, microsecond=0
-        )
-        elapsed = (now_user_tz - due).total_seconds()
-        is_due = 0 <= elapsed < 120
-        logger.debug(
-            "Daily ayah check: chat_id=%s, timezone=%s, user_time=%02d:%02d, due_time=%02d:%02d, elapsed_seconds=%s, is_due=%s",
-            chat.chat_id,
-            chat.timezone,
-            now_user_tz.hour,
-            now_user_tz.minute,
-            due_hour,
-            due_minute,
-            round(elapsed, 1),
-            is_due,
-        )
-        return is_due

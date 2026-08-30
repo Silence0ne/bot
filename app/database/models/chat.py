@@ -51,13 +51,3 @@ class Chat(Base, UUIDMixin, TimestampMixin):
         uselist=False,
         cascade="all, delete-orphan",
     )
-
-    @property
-    def daily_ayah_hour(self) -> int:
-        hour, _minute = self.daily_time.split(":", 1)
-        return int(hour)
-
-    @property
-    def daily_ayah_minute(self) -> int:
-        _hour, minute = self.daily_time.split(":", 1)
-        return int(minute)
