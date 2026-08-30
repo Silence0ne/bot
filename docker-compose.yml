@@ -1,21 +1,16 @@
 services:
   postgres:
     image: postgres:17
-    container_name: quran-postgres
+    container_name: ${POSTGRES_CONTAINER_NAME:-quran-postgres}
     restart: unless-stopped
-
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-quran_bot}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_HOST: postgres
-
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
-
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
     healthcheck:
       test:
         [
@@ -28,17 +23,14 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: quran-redis
+    container_name: ${REDIS_CONTAINER_NAME:-quran-redis}
     restart: unless-stopped
-
     command:
       - redis-server
       - --appendonly
       - "yes"
-
     volumes:
       - redis_data:/data
-
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -46,35 +38,28 @@ services:
       retries: 10
 
   bot:
+    image: ${BOT_IMAGE:-natiqquran/bot:latest}
     build:
       context: .
-
-    container_name: quran-bot
+    container_name: ${BOT_CONTAINER_NAME:-quran-bot}
     restart: unless-stopped
-
     env_file:
-      - .env.docker
-
+      - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/quran_bot
-      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: "postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@${POSTGRES_HOST:-postgres}:5432/${POSTGRES_DB:-quran_bot}"
+      REDIS_URL: "redis://${REDIS_HOST:-redis}:6379/${REDIS_DB:-0}"
       POSTGRES_DB: ${POSTGRES_DB:-quran_bot}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_HOST: postgres
-
+      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-
     security_opt:
       - no-new-privileges:true
-
     init: true
-
     tty: true
-
     tmpfs:
       - /tmp
 
