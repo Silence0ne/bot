@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from zoneinfo import ZoneInfo
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -151,6 +152,18 @@ def get_settings() -> Settings:
         Settings object
     """
     return Settings()
+
+
+def resolve_timezone(timezone_name: str | None) -> ZoneInfo:
+    """
+    Resolve a timezone name to a ZoneInfo, falling back to the configured
+    default timezone and finally UTC when the name is missing or invalid.
+    """
+    settings = get_settings()
+    try:
+        return ZoneInfo(timezone_name or settings.DAILY_AYAH_DEFAULT_TIMEZONE)
+    except Exception:
+        return ZoneInfo("UTC")
 
 
 def validate_runtime_settings() -> Settings:

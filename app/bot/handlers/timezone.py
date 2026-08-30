@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 
 from telegram import Update
-from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, ContextTypes
 from zoneinfo import ZoneInfo
 
@@ -105,7 +104,6 @@ async def timezone_settings(
 
                 await update.message.reply_text(
                     f"{get_message('timezone_set_success', language).format(timezone=text, time=scheduled_time)}\n\n📱 {settings.BOT_USERNAME}",
-                    parse_mode=ParseMode.MARKDOWN,
                     reply_markup=main_menu_keyboard(language),
                 )
                 logger.info(
@@ -135,7 +133,8 @@ async def timezone_settings(
         settings = get_settings()
 
         message = get_message("timezone_current", language).format(
-            timezone=current_tz, time=current_time_str
+            timezone=current_tz,
+            time=current_time_str,
         )
 
         message += f"\n\n{get_message('timezone_prompt', language)}"
@@ -143,7 +142,6 @@ async def timezone_settings(
 
         await update.message.reply_text(
             message,
-            parse_mode=ParseMode.MARKDOWN,
             reply_markup=main_menu_keyboard(language),
         )
 

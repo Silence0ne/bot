@@ -121,7 +121,7 @@ async def main() -> None:
 
         # Schedule daily ayah job
         logger.info("Scheduling daily ayah job...")
-        schedule_daily_ayah(application)
+        await schedule_daily_ayah(application)
 
         # Load cache after bot is polling (in background, bot is already working)
         logger.info("Loading Quran cache in background...")

@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Protocol
 
 import psutil
 from telegram import Update
-from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, ContextTypes
 
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
@@ -265,7 +264,6 @@ async def admin_settings_entry(
 
     await update.message.reply_text(
         f"{_build_admin_dashboard(update, context, language, stats, totals)}\n\n📱 {settings.BOT_USERNAME}",
-        parse_mode=ParseMode.MARKDOWN,
         reply_markup=main_menu_keyboard(language),
     )
 

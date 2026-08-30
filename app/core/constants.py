@@ -15,11 +15,6 @@ class ChatType(str, Enum):
     CHANNEL = "channel"
 
 
-class ParseMode(str, Enum):
-    HTML = "HTML"
-    MARKDOWN = "MarkdownV2"
-
-
 class ContentMode(str, Enum):
     RANDOM_AYAH = "random_ayah"
     RANDOM_PAGE = "random_page"

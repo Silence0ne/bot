@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 
 from telegram import Update
-from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, ContextTypes
 
 from app.api.checker import MessengerFeature
@@ -23,16 +22,16 @@ def format_ayah(ayah: Ayah) -> str:
 
     # Surah header: makki/madani icon + surah name (no trailing space if no icon)
     if ayah.surah_icon:
-        parts.append(f"{ayah.surah_icon} *{ayah.surah_name}*")
+        parts.append(f"{ayah.surah_icon} {ayah.surah_name}")
     else:
-        parts.append(f"*{ayah.surah_name}*")
+        parts.append(ayah.surah_name)
 
     # Bismillah (shown before the ayah text when applicable)
     if ayah.show_bismillah_line and ayah.bismillah_text:
         parts.append(ayah.bismillah_text)
 
     # Ayah text
-    parts.append(f"📖 *{ayah.text} ﴿{ayah.ayah_number}﴾*")
+    parts.append(f"📖 {ayah.text} ﴿{ayah.ayah_number}﴾")
 
     # Translation (if available)
     if ayah.translation:
@@ -103,7 +102,6 @@ async def random_ayah(
 
         await update.message.reply_text(
             text=format_ayah(ayah),
-            parse_mode=ParseMode.MARKDOWN,
             reply_markup=reply_markup,
         )
 
