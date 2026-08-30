@@ -60,6 +60,14 @@ def test_format_markdown_v2_preserves_bold():
     assert_valid_markdown_v2(out)
 
 
+def test_format_markdown_v2_double_asterisk_bold():
+    out = format_markdown_v2("**Bold** and *single* (paren) 12.5% yes_no.com")
+    assert "*Bold*" in out
+    assert "*single*" in out
+    assert "**" not in out
+    assert_valid_markdown_v2(out)
+
+
 def test_format_ayah_bold_and_valid():
     ayah = build_ayah()
     out = format_ayah(ayah)
