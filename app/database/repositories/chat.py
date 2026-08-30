@@ -3,12 +3,11 @@ from __future__ import annotations
 import logging
 from datetime import date, datetime
 from typing import TYPE_CHECKING
-from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import get_settings
+from app.core.config import get_settings, resolve_timezone
 from app.core.constants import ChatType, ContentMode
 
 logger = logging.getLogger(__name__)
@@ -16,8 +15,6 @@ logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from app.database.models.chat import Chat
     from app.database.session import Database
-
-logger = logging.getLogger(__name__)
 
 
 class ChatRepository:
@@ -212,9 +209,5 @@ class ChatRepository:
 
     @staticmethod
     def _local_today(timezone_name: str | None) -> date:
-        settings = get_settings()
-        try:
-            tz = ZoneInfo(timezone_name or settings.DAILY_AYAH_DEFAULT_TIMEZONE)
-        except Exception:
-            tz = ZoneInfo("UTC")
+        tz = resolve_timezone(timezone_name)
         return datetime.now(tz).date()

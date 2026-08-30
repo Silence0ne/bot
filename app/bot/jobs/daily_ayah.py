@@ -8,9 +8,10 @@ from zoneinfo import ZoneInfo
 from telegram.ext import Application, ContextTypes, JobQueue
 
 from app.api.checker import MessengerFeature
-from app.core.config import get_settings
+from app.bot.handlers.random import format_ayah
+from app.core.config import resolve_timezone
 from app.i18n import detect_language
-from app.ui.keyboards.random import random_page_keyboard
+from app.ui.keyboards.random import random_ayah_keyboard, random_page_keyboard
 
 if TYPE_CHECKING:
     from app.database.models.chat import Chat
@@ -19,11 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def _resolve_timezone(chat: "Chat") -> ZoneInfo:
-    settings = get_settings()
-    try:
-        return ZoneInfo(chat.timezone or settings.DAILY_AYAH_DEFAULT_TIMEZONE)
-    except Exception:
-        return ZoneInfo("UTC")
+    return resolve_timezone(chat.timezone)
 
 
 def _parse_daily_time(chat: "Chat") -> time | None:
@@ -99,9 +96,6 @@ async def send_daily_ayah_job(context: ContextTypes.DEFAULT_TYPE) -> None:
         log_surah: int = -1
         log_ayah: int = -1
 
-        # Get settings instance
-        settings = get_settings()
-
         # Determine if sending an ayah or a page
         reply_markup = None
 
@@ -127,14 +121,16 @@ async def send_daily_ayah_job(context: ContextTypes.DEFAULT_TYPE) -> None:
             ayah = await container.provider.random_ayah()
             log_surah = ayah.surah_number
             log_ayah = ayah.ayah_number
-            # Format message
-            message = (
-                f"🕋 *{ayah.surah_name}*\n\n"
-                f"📖 *{ayah.text} ﴿{ayah.ayah_number}﴾*\n\n"
-            )
-            if ayah.translation:
-                message += f"📝 {ayah.translation} ({ayah.ayah_number})\n\n"
-            message += f"📱 {settings.BOT_USERNAME}"
+            language = detect_language(user.language)
+            # format_ayah already appends the bot attribution line
+            message = format_ayah(ayah)
+
+            # Attach the same inline keyboard as the random ayah
+            # (Next Ayah).
+            if context.application.bot_data["feature_checker"].supports(
+                MessengerFeature.INLINE_KEYBOARD
+            ):
+                reply_markup = random_ayah_keyboard(ayah.uuid, language)
 
         # Send to user
         await context.bot.send_message(

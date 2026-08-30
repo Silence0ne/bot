@@ -9,7 +9,6 @@ from telegram.ext import CallbackQueryHandler, ContextTypes
 from app.api.checker import MessengerFeature
 from app.bot.handlers.random import format_ayah
 from app.bot.handlers.random_page import format_page, generate_random_page
-from app.core.config import get_settings
 from app.core.container import Container
 from app.i18n import detect_language, get_message
 from app.schemas.ayah import Ayah
@@ -218,8 +217,17 @@ async def _handle_next_page(
             )
             return
 
-        # Get current page from user data, or start from page 1
-        current_page = context.user_data.get("current_page") or 1
+        # Determine the current page from the uuid in the callback data.
+        # user_data["current_page"] is only set for pages generated interactively,
+        # so it cannot be relied on here (e.g. daily-sent pages never set it).
+        current_ayahs = await container.provider.get_ayahs_by_first_ayah_uuid(
+            query.data.split(":")[1]
+        )
+        current_page = (
+            current_ayahs[0].page
+            if current_ayahs and current_ayahs[0].page is not None
+            else (context.user_data.get("current_page") or 1)
+        )
         next_page = current_page + 1
 
         # Get ayahs for the next page
@@ -426,39 +434,9 @@ async def _reply_with_page_translation(
     ):
         reply_markup = random_page_keyboard(ayahs[0].uuid, language, True)
 
-    # Format page with translations
-    settings = get_settings()
-    parts: list[str] = []
-
-    if ayahs:
-        first_ayah = ayahs[0]
-        page_num = first_ayah.page if first_ayah.page else "?"
-        if first_ayah.surah_icon:
-            parts.append(
-                f"{first_ayah.surah_icon} *{first_ayah.surah_name}* (Page {page_num})"
-            )
-        else:
-            parts.append(f"*{first_ayah.surah_name}* (Page {page_num})")
-
-        if first_ayah.show_bismillah_line and first_ayah.bismillah_text:
-            parts.append(first_ayah.bismillah_text)
-            parts.append("")  # Add spacing after bismillah
-
-    for i, ayah in enumerate(ayahs):
-        if i > 0:
-            parts.append("─" * 10)
-
-        parts.append(f"📖 *{ayah.text} ﴿{ayah.ayah_number}﴾*")
-
-        if ayah.translation:
-            parts.append(f"📝 {ayah.translation}")
-
-    parts.append("")
-    parts.append(f"📱 {settings.BOT_USERNAME}")
-
     # Send as new message
     await message.reply_text(
-        text="\n".join(parts),
+        text=format_page(ayahs, show_translation=True),
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=reply_markup,
     )

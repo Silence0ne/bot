@@ -25,8 +25,12 @@ async def generate_random_page(container: Container) -> list[Ayah]:
     return await container.provider.random_page()
 
 
-def format_page(ayahs: list[Ayah]) -> str:
-    """Format a page (group of ayahs) in a language-agnostic way."""
+def format_page(
+    ayahs: list[Ayah],
+    *,
+    show_translation: bool = False,
+) -> str:
+    """Format a page (group of ayahs), optionally including translations."""
     settings = get_settings()
     parts: list[str] = []
 
@@ -36,15 +40,29 @@ def format_page(ayahs: list[Ayah]) -> str:
         page_num = first_ayah.page if first_ayah.page else "?"
         icon = first_ayah.surah_icon if first_ayah.surah_icon else "🕋"
         parts.append(f"{icon} *{first_ayah.surah_name}* (Page {page_num})")
-        parts.append("")
+
+        if show_translation:
+            if first_ayah.show_bismillah_line and first_ayah.bismillah_text:
+                parts.append(first_ayah.bismillah_text)
+            parts.append("")
+        else:
+            parts.append("")
 
     # Format each ayah in the page with better spacing
     for i, ayah in enumerate(ayahs):
+        if show_translation and i > 0:
+            parts.append("─" * 10)
+
         parts.append(f"📖 *{ayah.text} ﴿{ayah.ayah_number}﴾*")
-        parts.append("──────────")
+
+        if show_translation:
+            if ayah.translation:
+                parts.append(f"📝 {ayah.translation}")
+        else:
+            parts.append("──────────")
 
     # Remove the last separator
-    if parts:
+    if not show_translation and parts:
         parts.pop()
 
     # Attribution
