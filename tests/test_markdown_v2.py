@@ -47,7 +47,9 @@ def build_ayah(**overrides):
 
 
 def test_escape_markdown_v2():
-    escaped = escape_markdown_v2("(GMT+4) 100% 12.5 f_g h-i.j k,l {x} = y + z - n > m # t ! u _ v * w")
+    escaped = escape_markdown_v2(
+        "(GMT+4) 100% 12.5 f_g h-i.j k,l {x} = y + z - n > m # t ! u _ v * w"
+    )
     plain = unescape(escaped)
     assert all(c not in SPECIAL for c in plain)
 

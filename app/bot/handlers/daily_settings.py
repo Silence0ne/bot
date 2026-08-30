@@ -509,7 +509,9 @@ async def set_time(
 ) -> None:
     """Set user's daily sending time."""
     try:
-        chat = await chat_repo.update_preferences(telegram_id=telegram_id, daily_time=time)
+        chat = await chat_repo.update_preferences(
+            telegram_id=telegram_id, daily_time=time
+        )
 
         if chat is not None:
             schedule_user_daily_ayah(context.application, chat)

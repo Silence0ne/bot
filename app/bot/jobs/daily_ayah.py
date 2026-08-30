@@ -74,7 +74,9 @@ async def send_daily_ayah_job(context: ContextTypes.DEFAULT_TYPE) -> None:
         user = await chat_repo.get_by_telegram_id(chat_id)
 
         if user is None:
-            logger.info("User no longer exists, removing daily ayah job: chat_id=%s", chat_id)
+            logger.info(
+                "User no longer exists, removing daily ayah job: chat_id=%s", chat_id
+            )
             remove_daily_ayah_job(context.application, chat_id)
             return
 
@@ -108,9 +110,9 @@ async def send_daily_ayah_job(context: ContextTypes.DEFAULT_TYPE) -> None:
 
             # Attach the same inline keyboard as the random page
             # (Next Page / Translation toggle).
-            if content and context.application.bot_data[
-                "feature_checker"
-            ].supports(MessengerFeature.INLINE_KEYBOARD):
+            if content and context.application.bot_data["feature_checker"].supports(
+                MessengerFeature.INLINE_KEYBOARD
+            ):
                 language = detect_language(user.language)
                 reply_markup = random_page_keyboard(
                     content[0].uuid,
