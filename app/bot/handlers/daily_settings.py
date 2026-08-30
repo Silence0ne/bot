@@ -12,6 +12,7 @@ from zoneinfo import ZoneInfo
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
 from app.bot.jobs.daily_ayah import schedule_user_daily_ayah
 from app.core.config import get_settings
+from app.core.markdown import format_markdown_v2
 from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
 
@@ -148,7 +149,7 @@ async def _render_daily_settings(
         time=current_time,
         type=current_type,
     )
-    message += f"\n\n📱 {settings.BOT_USERNAME}"
+    message = format_markdown_v2(f"{message}\n\n📱 {settings.BOT_USERNAME}")
 
     # Create inline keyboard for settings navigation
     keyboard = [
@@ -176,13 +177,13 @@ async def _render_daily_settings(
         await _safe_edit_message_text(
             update.callback_query,
             message,
-            parse_mode=ParseMode.MARKDOWN,
+            parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=reply_markup,
         )
     else:
         await update.message.reply_text(
             message,
-            parse_mode=ParseMode.MARKDOWN,
+            parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=reply_markup,
         )
 
@@ -307,8 +308,10 @@ async def daily_settings_callback(
             settings = get_settings()
             await _safe_edit_message_text(
                 update.callback_query,
-                f"{get_message('start', language)}\n\n📱 {settings.BOT_USERNAME}",
-                parse_mode=ParseMode.MARKDOWN,
+                format_markdown_v2(
+                    f"{get_message('start', language)}\n\n📱 {settings.BOT_USERNAME}"
+                ),
+                parse_mode=ParseMode.MARKDOWN_V2,
                 reply_markup=main_menu_keyboard(language),
             )
             return

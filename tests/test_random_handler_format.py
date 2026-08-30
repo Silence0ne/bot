@@ -42,7 +42,7 @@ def test_format_ayah_includes_makki_icon() -> None:
 
     assert "🕋 *الفاتحة*" in text
     assert "📖 *sample text ﴿7﴾*" in text
-    assert "📝 sample translation (7)" in text
+    assert "📝 sample translation \\(7\\)" in text
     assert settings.BOT_USERNAME in text
 
 

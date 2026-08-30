@@ -49,7 +49,7 @@ async def _reply_with_ayah(
     # Send as new message
     await message.reply_text(
         text=format_ayah(ayah),
-        parse_mode=ParseMode.MARKDOWN,
+        parse_mode=ParseMode.MARKDOWN_V2,
         reply_markup=reply_markup,
     )
 
@@ -90,7 +90,7 @@ async def _reply_with_page(
     # Send as new message
     await message.reply_text(
         text=format_page(ayahs),
-        parse_mode=ParseMode.MARKDOWN,
+        parse_mode=ParseMode.MARKDOWN_V2,
         reply_markup=reply_markup,
     )
 
@@ -437,7 +437,7 @@ async def _reply_with_page_translation(
     # Send as new message
     await message.reply_text(
         text=format_page(ayahs, show_translation=True),
-        parse_mode=ParseMode.MARKDOWN,
+        parse_mode=ParseMode.MARKDOWN_V2,
         reply_markup=reply_markup,
     )
 

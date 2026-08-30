@@ -10,6 +10,7 @@ from telegram.ext import CommandHandler, ContextTypes
 from app.api.checker import MessengerFeature
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
 from app.core.config import get_settings
+from app.core.markdown import escape_markdown_v2
 from app.i18n import detect_language, get_message
 from app.schemas.ayah import Ayah
 from app.ui.keyboards.random import random_page_keyboard
@@ -39,11 +40,14 @@ def format_page(
         first_ayah = ayahs[0]
         page_num = first_ayah.page if first_ayah.page else "?"
         icon = first_ayah.surah_icon if first_ayah.surah_icon else "🕋"
-        parts.append(f"{icon} *{first_ayah.surah_name}* (Page {page_num})")
+        surah_name = escape_markdown_v2(first_ayah.surah_name)
+        parts.append(
+            f"{icon} *{surah_name}* \\(Page {escape_markdown_v2(str(page_num))}\\)"
+        )
 
         if show_translation:
             if first_ayah.show_bismillah_line and first_ayah.bismillah_text:
-                parts.append(first_ayah.bismillah_text)
+                parts.append(escape_markdown_v2(first_ayah.bismillah_text))
             parts.append("")
         else:
             parts.append("")
@@ -53,11 +57,12 @@ def format_page(
         if show_translation and i > 0:
             parts.append("─" * 10)
 
-        parts.append(f"📖 *{ayah.text} ﴿{ayah.ayah_number}﴾*")
+        ayah_text = escape_markdown_v2(f"{ayah.text} ﴿{ayah.ayah_number}﴾")
+        parts.append(f"📖 *{ayah_text}*")
 
         if show_translation:
             if ayah.translation:
-                parts.append(f"📝 {ayah.translation}")
+                parts.append(f"📝 {escape_markdown_v2(ayah.translation)}")
         else:
             parts.append("──────────")
 
@@ -67,7 +72,7 @@ def format_page(
 
     # Attribution
     parts.append("")
-    parts.append(f"📱 {settings.BOT_USERNAME}")
+    parts.append(f"📱 {escape_markdown_v2(settings.BOT_USERNAME)}")
 
     return "\n".join(parts)
 
@@ -146,7 +151,7 @@ async def random_page(
 
         await update.message.reply_text(
             text=format_page(page_ayahs),
-            parse_mode=ParseMode.MARKDOWN,
+            parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=reply_markup,
         )
 

@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
 from app.core.config import get_settings
+from app.core.markdown import format_markdown_v2
 from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
 
@@ -104,8 +105,10 @@ async def timezone_settings(
                 settings = get_settings()
 
                 await update.message.reply_text(
-                    f"{get_message('timezone_set_success', language).format(timezone=text, time=scheduled_time)}\n\n📱 {settings.BOT_USERNAME}",
-                    parse_mode=ParseMode.MARKDOWN,
+                    format_markdown_v2(
+                        f"{get_message('timezone_set_success', language).format(timezone=text, time=scheduled_time)}\n\n📱 {settings.BOT_USERNAME}"
+                    ),
+                    parse_mode=ParseMode.MARKDOWN_V2,
                     reply_markup=main_menu_keyboard(language),
                 )
                 logger.info(
@@ -135,15 +138,16 @@ async def timezone_settings(
         settings = get_settings()
 
         message = get_message("timezone_current", language).format(
-            timezone=current_tz, time=current_time_str
+            timezone=current_tz,
+            time=current_time_str,
         )
 
         message += f"\n\n{get_message('timezone_prompt', language)}"
         message += f"\n\n📱 {settings.BOT_USERNAME}"
 
         await update.message.reply_text(
-            message,
-            parse_mode=ParseMode.MARKDOWN,
+            format_markdown_v2(message),
+            parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=main_menu_keyboard(language),
         )
 

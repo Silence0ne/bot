@@ -5,6 +5,7 @@ from datetime import time
 from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
+from telegram.constants import ParseMode
 from telegram.ext import Application, ContextTypes, JobQueue
 
 from app.api.checker import MessengerFeature
@@ -136,6 +137,7 @@ async def send_daily_ayah_job(context: ContextTypes.DEFAULT_TYPE) -> None:
         await context.bot.send_message(
             chat_id=user.chat_id,
             text=message,
+            parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=reply_markup,
         )
 
