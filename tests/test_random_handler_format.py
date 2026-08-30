@@ -40,9 +40,9 @@ def test_format_ayah_includes_makki_icon() -> None:
     text = format_ayah(ayah)
     settings = get_settings()
 
-    assert "🕋 *الفاتحة*" in text
-    assert "📖 *sample text ﴿7﴾*" in text
-    assert "📝 sample translation \\(7\\)" in text
+    assert "🕋 <b>الفاتحة</b>" in text
+    assert "📖 <b>sample text ﴿7﴾</b>" in text
+    assert "📝 sample translation (7)" in text
     assert settings.BOT_USERNAME in text
 
 
@@ -54,7 +54,7 @@ def test_format_ayah_includes_madani_icon() -> None:
 
     text = format_ayah(ayah)
 
-    assert "🕌 *الفاتحة*" in text
+    assert "🕌 <b>الفاتحة</b>" in text
 
 
 def test_format_ayah_omits_extra_space_without_icon() -> None:
@@ -65,9 +65,9 @@ def test_format_ayah_omits_extra_space_without_icon() -> None:
 
     text = format_ayah(ayah)
 
-    assert "*الفاتحة*" in text
-    assert "\n\n📖 *sample text ﴿7﴾*" in text
-    assert " *الفاتحة*" not in text
+    assert "<b>الفاتحة</b>" in text
+    assert "\n\n📖 <b>sample text ﴿7﴾</b>" in text
+    assert " <b>الفاتحة</b>" not in text
 
 
 def test_format_ayah_shows_bismillah_line_for_first_non_bismillah_ayah() -> None:
@@ -85,7 +85,7 @@ def test_format_ayah_shows_bismillah_line_for_first_non_bismillah_ayah() -> None
 
     text = format_ayah(ayah)
 
-    expected_prefix = f"{bismillah_text}\n\n📖 *{ayah_text} ﴿1﴾*"
+    expected_prefix = f"{bismillah_text}\n\n📖 <b>{ayah_text} ﴿1﴾</b>"
     assert expected_prefix in text
 
 
@@ -103,5 +103,5 @@ def test_format_ayah_does_not_show_bismillah_line_when_surah_has_no_bismillah() 
 
     text = format_ayah(ayah)
 
-    assert f"📖 *{ayah_text} ﴿1﴾*" in text
+    assert f"📖 <b>{ayah_text} ﴿1﴾</b>" in text
     assert "fixture bismillah" not in text

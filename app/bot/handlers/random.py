@@ -9,7 +9,7 @@ from telegram.ext import CommandHandler, ContextTypes
 from app.api.checker import MessengerFeature
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
 from app.core.config import get_settings
-from app.core.markdown import escape_markdown_v2
+from app.core.markdown import escape_html
 from app.i18n import detect_language, get_message
 from app.schemas.ayah import Ayah
 from app.ui.keyboards import random_ayah_keyboard
@@ -23,29 +23,26 @@ def format_ayah(ayah: Ayah) -> str:
     parts: list[str] = []
 
     # Surah header: makki/madani icon + surah name (no trailing space if no icon)
-    surah_name = escape_markdown_v2(ayah.surah_name)
+    surah_name = escape_html(ayah.surah_name)
     if ayah.surah_icon:
-        parts.append(f"{ayah.surah_icon} *{surah_name}*")
+        parts.append(f"{ayah.surah_icon} <b>{surah_name}</b>")
     else:
-        parts.append(f"*{surah_name}*")
+        parts.append(f"<b>{surah_name}</b>")
 
     # Bismillah (shown before the ayah text when applicable)
     if ayah.show_bismillah_line and ayah.bismillah_text:
-        parts.append(escape_markdown_v2(ayah.bismillah_text))
+        parts.append(escape_html(ayah.bismillah_text))
 
     # Ayah text
-    ayah_text = escape_markdown_v2(f"{ayah.text} ﴿{ayah.ayah_number}﴾")
-    parts.append(f"📖 *{ayah_text}*")
+    ayah_text = escape_html(f"{ayah.text} ﴿{ayah.ayah_number}﴾")
+    parts.append(f"📖 <b>{ayah_text}</b>")
 
     # Translation (if available)
     if ayah.translation:
-        translation = escape_markdown_v2(ayah.translation)
-        parts.append(
-            f"📝 {translation} \\({escape_markdown_v2(str(ayah.ayah_number))}\\)"
-        )
+        parts.append(f"📝 {escape_html(ayah.translation)} ({ayah.ayah_number})")
 
     # Attribution
-    parts.append(f"📱 {escape_markdown_v2(settings.BOT_USERNAME)}")
+    parts.append(f"📱 {escape_html(settings.BOT_USERNAME)}")
 
     return "\n\n".join(parts)
 
@@ -109,7 +106,7 @@ async def random_ayah(
 
         await update.message.reply_text(
             text=format_ayah(ayah),
-            parse_mode=ParseMode.MARKDOWN_V2,
+            parse_mode=ParseMode.HTML,
             reply_markup=reply_markup,
         )
 

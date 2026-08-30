@@ -139,7 +139,7 @@ async def send_daily_ayah_job(context: ContextTypes.DEFAULT_TYPE) -> None:
         await context.bot.send_message(
             chat_id=user.chat_id,
             text=message,
-            parse_mode=ParseMode.MARKDOWN_V2,
+            parse_mode=ParseMode.HTML,
             reply_markup=reply_markup,
         )
 

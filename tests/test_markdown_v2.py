@@ -2,25 +2,28 @@ import re
 
 from app.bot.handlers.random import format_ayah
 from app.bot.handlers.random_page import format_page
-from app.core.markdown import escape_markdown_v2, format_markdown_v2
+from app.core.markdown import escape_html, format_html
 
-SPECIAL = set("_*[]()~`>#+-=|{}.!")
+# In HTML mode only &, <, > are special and must be escaped.
+SPECIAL = set("&<>")
 
 
 def unescape(text: str) -> str:
-    return re.sub(r"\\.", "", text)
+    return text.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">")
 
 
-def _plain_text(markdown: str) -> str:
-    """Remove intentional bold spans, leaving only plain (escaped) text."""
-    without_bold = re.sub(r"\*[^*]*\*", "", markdown)
-    return unescape(without_bold)
+def _plain_text(html: str) -> str:
+    """Remove bold tags, leaving only plain (escaped) text."""
+    return unescape(re.sub(r"</?b>", "", html))
 
 
-def assert_valid_markdown_v2(markdown: str) -> None:
-    plain = _plain_text(markdown)
-    bad = [c for c in plain if c in SPECIAL]
-    assert not bad, f"unescaped MarkdownV2 special chars: {bad}"
+def assert_valid_html(html: str) -> None:
+    # Remove bold tags, then confirm no raw special chars remain (they would
+    # need to have been escaped).
+    without_tags = re.sub(r"</?b>", "", html)
+    raw = re.sub(r"&(amp|lt|gt);", "", without_tags)
+    bad = [c for c in raw if c in SPECIAL]
+    assert not bad, f"unescaped HTML special chars: {bad}"
 
 
 def build_ayah(**overrides):
@@ -46,53 +49,56 @@ def build_ayah(**overrides):
     return Ayah(**defaults)
 
 
-def test_escape_markdown_v2():
-    escaped = escape_markdown_v2(
-        "(GMT+4) 100% 12.5 f_g h-i.j k,l {x} = y + z - n > m # t ! u _ v * w"
-    )
-    plain = unescape(escaped)
-    assert all(c not in SPECIAL for c in plain)
+def test_escape_html():
+    escaped = escape_html("Tom & Jerry <note> a > b")
+    assert escaped == "Tom &amp; Jerry &lt;note&gt; a &gt; b"
 
 
-def test_format_markdown_v2_preserves_bold():
-    out = format_markdown_v2("*Bold* and (paren) 12.5% yes_no.com")
-    assert "*Bold*" in out
-    assert_valid_markdown_v2(out)
+def test_format_html_preserves_bold():
+    out = format_html("**Bold** text (paren) 12.5% yes_no.com")
+    assert "<b>Bold</b>" in out
+    assert_valid_html(out)
 
 
-def test_format_markdown_v2_double_asterisk_bold():
-    out = format_markdown_v2("**Bold** and *single* (paren) 12.5% yes_no.com")
-    assert "*Bold*" in out
-    assert "*single*" in out
-    assert "**" not in out
-    assert_valid_markdown_v2(out)
+def test_format_html_double_asterisk_bold():
+    out = format_html("**Bold** and *single* (paren) 12.5% yes_no.com")
+    assert "<b>Bold</b>" in out
+    assert "<b>single</b>" in out
+    assert "*" not in out
+    assert_valid_html(out)
+
+
+def test_format_html_escapes_ampersand_inside_bold():
+    out = format_html("**Tom & Jerry**")
+    assert "<b>Tom &amp; Jerry</b>" in out
+    assert_valid_html(out)
 
 
 def test_format_ayah_bold_and_valid():
     ayah = build_ayah()
     out = format_ayah(ayah)
-    assert "*الفاتحة*" in out
-    assert "*sample text ﴿7﴾*" in out
-    assert_valid_markdown_v2(out)
+    assert "<b>الفاتحة</b>" in out
+    assert "<b>sample text ﴿7﴾</b>" in out
+    assert "📝 sample translation (7)" in out
+    assert_valid_html(out)
 
 
 def test_format_ayah_escapes_special_text():
     ayah = build_ayah(
         surah_icon="",
         surah_period="unknown",
-        text="spec _*[] ( ) ~`>#+-=|{}.! chars",
-        translation="T _*[] (x) 1.2 a-b c+d {e} f! g~",
-        bismillah_text="B _*[] (x) .!",
+        text="spec & < > chars",
+        translation="T & < > and (x) 1.2",
+        bismillah_text="B & < >",
         show_bismillah_line=True,
     )
     out = format_ayah(ayah)
-    assert_valid_markdown_v2(out)
-    # bold must still render on the ayah text line
-    assert "📖 *" in out
+    assert_valid_html(out)
+    assert "<b>" in out
 
 
 def test_format_page_valid():
-    p1 = build_ayah(text="t .! x_", ayah_number=1, surah_name="سورة")
-    p2 = build_ayah(text="T .! x_", ayah_number=2, surah_name="سورة")
-    assert_valid_markdown_v2(format_page([p1, p2]))
-    assert_valid_markdown_v2(format_page([p1, p2], show_translation=True))
+    p1 = build_ayah(text="t & < > x", ayah_number=1, surah_name="سورة")
+    p2 = build_ayah(text="T & < > x", ayah_number=2, surah_name="سورة")
+    assert_valid_html(format_page([p1, p2]))
+    assert_valid_html(format_page([p1, p2], show_translation=True))

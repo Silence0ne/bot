@@ -11,7 +11,7 @@ from telegram.ext import CommandHandler, ContextTypes
 
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
 from app.core.config import get_settings
-from app.core.markdown import format_markdown_v2
+from app.core.markdown import format_html
 from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
 
@@ -265,10 +265,10 @@ async def admin_settings_entry(
     settings = get_settings()
 
     await update.message.reply_text(
-        format_markdown_v2(
+        format_html(
             f"{_build_admin_dashboard(update, context, language, stats, totals)}\n\n📱 {settings.BOT_USERNAME}"
         ),
-        parse_mode=ParseMode.MARKDOWN_V2,
+        parse_mode=ParseMode.HTML,
         reply_markup=main_menu_keyboard(language),
     )
 
