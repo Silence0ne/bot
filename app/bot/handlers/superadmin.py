@@ -6,12 +6,10 @@ from typing import TYPE_CHECKING, Protocol
 
 import psutil
 from telegram import Update
-from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, ContextTypes
 
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
 from app.core.config import get_settings
-from app.core.markdown import format_html
 from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
 
@@ -265,10 +263,7 @@ async def admin_settings_entry(
     settings = get_settings()
 
     await update.message.reply_text(
-        format_html(
-            f"{_build_admin_dashboard(update, context, language, stats, totals)}\n\n📱 {settings.BOT_USERNAME}"
-        ),
-        parse_mode=ParseMode.HTML,
+        f"{_build_admin_dashboard(update, context, language, stats, totals)}\n\n📱 {settings.BOT_USERNAME}",
         reply_markup=main_menu_keyboard(language),
     )
 

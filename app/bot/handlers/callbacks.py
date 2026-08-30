@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 
 from telegram import Update
-from telegram.constants import ParseMode
 from telegram.ext import CallbackQueryHandler, ContextTypes
 
 from app.api.checker import MessengerFeature
@@ -49,7 +48,6 @@ async def _reply_with_ayah(
     # Send as new message
     await message.reply_text(
         text=format_ayah(ayah),
-        parse_mode=ParseMode.HTML,
         reply_markup=reply_markup,
     )
 
@@ -90,7 +88,6 @@ async def _reply_with_page(
     # Send as new message
     await message.reply_text(
         text=format_page(ayahs),
-        parse_mode=ParseMode.HTML,
         reply_markup=reply_markup,
     )
 
@@ -437,7 +434,6 @@ async def _reply_with_page_translation(
     # Send as new message
     await message.reply_text(
         text=format_page(ayahs, show_translation=True),
-        parse_mode=ParseMode.HTML,
         reply_markup=reply_markup,
     )
 

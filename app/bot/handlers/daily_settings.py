@@ -4,7 +4,6 @@ import logging
 from typing import TYPE_CHECKING
 
 from telegram import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.constants import ParseMode
 from telegram.error import BadRequest
 from telegram.ext import ContextTypes
 from zoneinfo import ZoneInfo
@@ -12,7 +11,6 @@ from zoneinfo import ZoneInfo
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
 from app.bot.jobs.daily_ayah import schedule_user_daily_ayah
 from app.core.config import get_settings
-from app.core.markdown import format_html
 from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
 
@@ -86,14 +84,12 @@ async def _safe_edit_message_text(
     query: CallbackQuery,
     text: str,
     *,
-    parse_mode: str | None = None,
     reply_markup: InlineKeyboardMarkup | None = None,
 ) -> None:
     """Edit a callback query's message, ignoring harmless errors."""
     try:
         await query.edit_message_text(
             text,
-            parse_mode=parse_mode,
             reply_markup=reply_markup,
         )
     except BadRequest:
@@ -149,7 +145,7 @@ async def _render_daily_settings(
         time=current_time,
         type=current_type,
     )
-    message = format_html(f"{message}\n\n📱 {settings.BOT_USERNAME}")
+    message = f"{message}\n\n📱 {settings.BOT_USERNAME}"
 
     # Create inline keyboard for settings navigation
     keyboard = [
@@ -177,13 +173,11 @@ async def _render_daily_settings(
         await _safe_edit_message_text(
             update.callback_query,
             message,
-            parse_mode=ParseMode.HTML,
             reply_markup=reply_markup,
         )
     else:
         await update.message.reply_text(
             message,
-            parse_mode=ParseMode.HTML,
             reply_markup=reply_markup,
         )
 
@@ -308,10 +302,7 @@ async def daily_settings_callback(
             settings = get_settings()
             await _safe_edit_message_text(
                 update.callback_query,
-                format_html(
-                    f"{get_message('start', language)}\n\n📱 {settings.BOT_USERNAME}"
-                ),
-                parse_mode=ParseMode.HTML,
+                f"{get_message('start', language)}\n\n📱 {settings.BOT_USERNAME}",
                 reply_markup=main_menu_keyboard(language),
             )
             return

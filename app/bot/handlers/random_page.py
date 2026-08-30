@@ -4,13 +4,11 @@ import logging
 from typing import TYPE_CHECKING
 
 from telegram import Update
-from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, ContextTypes
 
 from app.api.checker import MessengerFeature
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
 from app.core.config import get_settings
-from app.core.markdown import escape_html
 from app.i18n import detect_language, get_message
 from app.schemas.ayah import Ayah
 from app.ui.keyboards.random import random_page_keyboard
@@ -40,14 +38,11 @@ def format_page(
         first_ayah = ayahs[0]
         page_num = first_ayah.page if first_ayah.page else "?"
         icon = first_ayah.surah_icon if first_ayah.surah_icon else "🕋"
-        surah_name = escape_html(first_ayah.surah_name)
-        parts.append(
-            f"{icon} <b>{surah_name}</b> (Page {escape_html(str(page_num))})"
-        )
+        parts.append(f"{icon} {first_ayah.surah_name} (Page {page_num})")
 
         if show_translation:
             if first_ayah.show_bismillah_line and first_ayah.bismillah_text:
-                parts.append(escape_html(first_ayah.bismillah_text))
+                parts.append(first_ayah.bismillah_text)
             parts.append("")
         else:
             parts.append("")
@@ -57,12 +52,11 @@ def format_page(
         if show_translation and i > 0:
             parts.append("─" * 10)
 
-        ayah_text = escape_html(f"{ayah.text} ﴿{ayah.ayah_number}﴾")
-        parts.append(f"📖 <b>{ayah_text}</b>")
+        parts.append(f"📖 {ayah.text} ﴿{ayah.ayah_number}﴾")
 
         if show_translation:
             if ayah.translation:
-                parts.append(f"📝 {escape_html(ayah.translation)}")
+                parts.append(f"📝 {ayah.translation}")
         else:
             parts.append("──────────")
 
@@ -72,7 +66,7 @@ def format_page(
 
     # Attribution
     parts.append("")
-    parts.append(f"📱 {escape_html(settings.BOT_USERNAME)}")
+    parts.append(f"📱 {settings.BOT_USERNAME}")
 
     return "\n".join(parts)
 
@@ -151,7 +145,6 @@ async def random_page(
 
         await update.message.reply_text(
             text=format_page(page_ayahs),
-            parse_mode=ParseMode.HTML,
             reply_markup=reply_markup,
         )
 

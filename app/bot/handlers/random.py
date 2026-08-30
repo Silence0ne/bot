@@ -3,13 +3,11 @@ from __future__ import annotations
 import logging
 
 from telegram import Update
-from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, ContextTypes
 
 from app.api.checker import MessengerFeature
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
 from app.core.config import get_settings
-from app.core.markdown import escape_html
 from app.i18n import detect_language, get_message
 from app.schemas.ayah import Ayah
 from app.ui.keyboards import random_ayah_keyboard
@@ -23,26 +21,24 @@ def format_ayah(ayah: Ayah) -> str:
     parts: list[str] = []
 
     # Surah header: makki/madani icon + surah name (no trailing space if no icon)
-    surah_name = escape_html(ayah.surah_name)
     if ayah.surah_icon:
-        parts.append(f"{ayah.surah_icon} <b>{surah_name}</b>")
+        parts.append(f"{ayah.surah_icon} {ayah.surah_name}")
     else:
-        parts.append(f"<b>{surah_name}</b>")
+        parts.append(ayah.surah_name)
 
     # Bismillah (shown before the ayah text when applicable)
     if ayah.show_bismillah_line and ayah.bismillah_text:
-        parts.append(escape_html(ayah.bismillah_text))
+        parts.append(ayah.bismillah_text)
 
     # Ayah text
-    ayah_text = escape_html(f"{ayah.text} ﴿{ayah.ayah_number}﴾")
-    parts.append(f"📖 <b>{ayah_text}</b>")
+    parts.append(f"📖 {ayah.text} ﴿{ayah.ayah_number}﴾")
 
     # Translation (if available)
     if ayah.translation:
-        parts.append(f"📝 {escape_html(ayah.translation)} ({ayah.ayah_number})")
+        parts.append(f"📝 {ayah.translation} ({ayah.ayah_number})")
 
     # Attribution
-    parts.append(f"📱 {escape_html(settings.BOT_USERNAME)}")
+    parts.append(f"📱 {settings.BOT_USERNAME}")
 
     return "\n\n".join(parts)
 
@@ -106,7 +102,6 @@ async def random_ayah(
 
         await update.message.reply_text(
             text=format_ayah(ayah),
-            parse_mode=ParseMode.HTML,
             reply_markup=reply_markup,
         )
 
