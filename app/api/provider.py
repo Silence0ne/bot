@@ -489,16 +489,12 @@ class NatiqProvider:
         if not self._cache.ayahs:
             raise RuntimeError("Quran cache empty")
 
-        page_numbers = {
-            self._get_ayah_metadata(ayah).get("page")
-            for ayah in self._cache.ayahs
-            if self._get_ayah_metadata(ayah).get("page") is not None
-        }
+        page_numbers = list(self._cache.page_ayahs)
 
         if not page_numbers:
             return []
 
-        page_number = random.choice(sorted(page_numbers))
+        page_number = random.choice(page_numbers)
         return await self.get_ayahs_by_page(page_number)
 
     async def get_ayahs_by_page(self, page_number: int) -> list[Ayah]:
@@ -506,20 +502,34 @@ class NatiqProvider:
         if not self._cache.ayahs:
             raise RuntimeError("Quran cache empty")
 
-        # Optimize by filtering with list comprehension instead of loop
-        page_ayahs = [
-            self._build_ayah_from_item(ayah)
-            for ayah in self._cache.ayahs
-            if self._get_ayah_metadata(ayah).get("page") == page_number
-        ]
+        uuids = self._cache.page_ayahs.get(page_number)
+        if not uuids:
+            # Fall back to a scan in case the page index hasn't been built yet
+            # (e.g. cache is still loading).
+            return [
+                self._build_ayah_from_item(ayah)
+                for ayah in self._cache.ayahs
+                if self._get_ayah_metadata(ayah).get("page") == page_number
+            ]
 
-        return page_ayahs
+        ayah_map = self._cache.ayah_map
+        return [
+            self._build_ayah_from_item(ayah_map[uuid])
+            for uuid in uuids
+            if uuid in ayah_map
+        ]
 
     async def get_ayahs_by_first_ayah_uuid(self, ayah_uuid: str) -> list[Ayah]:
         """Get all ayahs for the page identified by the uuid of its first ayah."""
         if not self._cache.ayahs:
             raise RuntimeError("Quran cache empty")
 
+        page = self._cache.uuid_page.get(ayah_uuid)
+
+        if page is not None:
+            return await self.get_ayahs_by_page(page)
+
+        # Fall back to a scan if the index is incomplete.
         for ayah in self._cache.ayahs:
             if ayah.get("uuid") != ayah_uuid:
                 continue

@@ -36,9 +36,18 @@ class QuranCache:
         self.surah_map: dict[int, dict[str, Any]] = {}
         self.surah_uuid_map: dict[str, dict[str, Any]] = {}
 
+        # Page indexes (built once ayahs + takhtits are available).
+        # page_ayahs maps a page number to the ordered list of ayah UUIDs on it.
+        self.page_ayahs: dict[int, list[str]] = {}
+        # uuid_page maps an ayah UUID to its page number (when known).
+        self.uuid_page: dict[str, int] = {}
+
     def set_ayahs(self, items: list[dict[str, Any]]) -> None:
         self.ayahs = items
         self.ayah_map = {item["uuid"]: item for item in items if item.get("uuid")}
+
+        # Page indexes can only be built once takhtit metadata is present.
+        self._clear_page_indexes()
 
         logger.info("Cached %s ayahs", len(self.ayahs))
 
@@ -46,7 +55,49 @@ class QuranCache:
         self.takhtits = items
         self.takhtit_map = {item["uuid"]: item for item in items if item.get("uuid")}
 
+        self._build_page_indexes()
+
         logger.info("Cached %s takhtits", len(self.takhtits))
+
+    @staticmethod
+    def _extract_page(ayah: dict[str, Any], takhtit_map: dict[str, dict[str, Any]]) -> int | None:
+        """Resolve the page number for an ayah, replicating provider fallback."""
+        metadata = takhtit_map.get(ayah.get("uuid", ""))
+        if metadata and metadata.get("page") is not None:
+            return int(metadata["page"])
+
+        for breaker in ayah.get("breakers") or []:
+            if not isinstance(breaker, dict):
+                continue
+            if breaker.get("name") == "page" and breaker.get("number") is not None:
+                return int(breaker["number"])
+
+        return None
+
+    def _clear_page_indexes(self) -> None:
+        self.page_ayahs = {}
+        self.uuid_page = {}
+
+    def _build_page_indexes(self) -> None:
+        self._clear_page_indexes()
+
+        for ayah in self.ayahs:
+            ayah_uuid = ayah.get("uuid")
+            if not ayah_uuid:
+                continue
+
+            page = self._extract_page(ayah, self.takhtit_map)
+            if page is None:
+                continue
+
+            self.uuid_page[ayah_uuid] = page
+            self.page_ayahs.setdefault(page, []).append(ayah_uuid)
+
+        logger.info(
+            "Indexed %s pages for %s ayahs",
+            len(self.page_ayahs),
+            len(self.uuid_page),
+        )
 
     def set_translations(self, items: list[dict[str, Any]]) -> None:
         self.translations = items

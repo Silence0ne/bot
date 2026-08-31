@@ -2,11 +2,10 @@ from __future__ import annotations
 
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler
 
-from app.api.checker import MessengerFeature
 from app.bot.handlers.callbacks import get_callback_handlers
 from app.bot.handlers.daily_settings import (
-    daily_settings,
     daily_settings_callback,
+    daily_settings,
 )
 from app.bot.handlers.help import get_handler as get_help_handler
 from app.bot.handlers.menu import get_handler as get_main_menu_handler
@@ -31,14 +30,19 @@ def register_handlers(application: Application) -> None:
     application.add_handler(get_timezone_handler())
     application.add_handler(get_main_menu_handler())
 
-    feature_checker = application.bot_data["feature_checker"]
+    # Callback handlers are registered unconditionally. Inline keyboards and
+    # callback queries are core to this bot's UX (random ayah/page navigation
+    # and the daily-settings wizard), so they must never be silently disabled
+    # by a fragile startup capability probe (e.g. on Bale's fork of the Bot
+    # API). Each handler is scoped by an explicit pattern so unrelated
+    # callbacks are never swallowed.
+    for handler in get_callback_handlers():
+        application.add_handler(handler)
 
-    if feature_checker.log_if_unsupported(
-        MessengerFeature.CALLBACK_QUERY,
-        context="register_handlers",
-    ):
-        for handler in get_callback_handlers():
-            application.add_handler(handler)
-
-        # Add daily settings callback handler
-        application.add_handler(CallbackQueryHandler(daily_settings_callback))
+    # Daily settings wizard callbacks are scoped to their own "daily_" prefix.
+    application.add_handler(
+        CallbackQueryHandler(
+            daily_settings_callback,
+            pattern=r"^daily_",
+        )
+    )
