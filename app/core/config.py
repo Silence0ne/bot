@@ -28,7 +28,7 @@ class Settings(BaseSettings):
 
     # Bot
     BOT_TOKEN: str = ""
-    BOT_USERNAME: str = "@NatiqBot"
+    BOT_USERNAME: str = "@NatiqChatBot"
     BOT_API: str = "https://api.telegram.org"
     PLATFORM: str = "TELEGRAM"
     BOT_LANGUAGE: str = "fa"
