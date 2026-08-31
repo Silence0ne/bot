@@ -573,8 +573,11 @@ class NatiqProvider:
         # Fallback: sequential navigation through the ordered ayah list (used
         # when the index is incomplete, e.g. metadata was missing at load).
         current_index = next(
-            (index for index, ayah in enumerate(self._cache.ayahs)
-             if ayah.get("uuid") == current_uuid),
+            (
+                index
+                for index, ayah in enumerate(self._cache.ayahs)
+                if ayah.get("uuid") == current_uuid
+            ),
             None,
         )
 

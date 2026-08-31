@@ -76,6 +76,7 @@ TIMEZONE_CONTINENTS = {
     ],
 }
 
+
 # Daily type options
 async def _safe_edit_message_text(
     query: CallbackQuery,
