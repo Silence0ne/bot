@@ -60,7 +60,9 @@ class QuranCache:
         logger.info("Cached %s takhtits", len(self.takhtits))
 
     @staticmethod
-    def _extract_page(ayah: dict[str, Any], takhtit_map: dict[str, dict[str, Any]]) -> int | None:
+    def _extract_page(
+        ayah: dict[str, Any], takhtit_map: dict[str, dict[str, Any]]
+    ) -> int | None:
         """Resolve the page number for an ayah, replicating provider fallback."""
         metadata = takhtit_map.get(ayah.get("uuid", ""))
         if metadata and metadata.get("page") is not None:
