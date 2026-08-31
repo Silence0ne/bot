@@ -57,7 +57,17 @@ class InMemoryRateLimiter:
             return False
 
         hits.append(now)
+
+        # Opportunistically prune stale keys so the fallback limiter doesn't
+        # grow unboundedly with the number of distinct chats/endpoints.
+        if len(self._hits) > self._MAX_KEYS:
+            expired = [k for k, d in self._hits.items() if not d]
+            for k in expired:
+                self._hits.pop(k, None)
+
         return True
+
+    _MAX_KEYS = 10_000
 
 
 class RedisRateLimiter:

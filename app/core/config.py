@@ -32,7 +32,6 @@ class Settings(BaseSettings):
     BOT_API: str = "https://api.telegram.org"
     PLATFORM: str = "TELEGRAM"
     BOT_LANGUAGE: str = "fa"
-    OPEN_IN_NATIQ_BASE_URL: str = "https://api.natiq.net/"
     ADMIN_USER_IDS: str = ""  # Comma-separated list
 
     # Database

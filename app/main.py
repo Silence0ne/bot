@@ -125,7 +125,18 @@ async def main() -> None:
 
         # Load cache after bot is polling (in background, bot is already working)
         logger.info("Loading Quran cache in background...")
-        asyncio.create_task(container.load_cache())
+        cache_task = asyncio.create_task(container.load_cache())
+
+        def _on_cache_loaded(task: asyncio.Task) -> None:
+            try:
+                loaded = task.result()
+            except Exception:
+                logger.exception("Background Quran cache load raised")
+                return
+            if not loaded:
+                logger.warning("Quran cache failed to load in background.")
+
+        cache_task.add_done_callback(_on_cache_loaded)
 
         while True:
             await asyncio.sleep(3600)

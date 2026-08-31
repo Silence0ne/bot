@@ -89,4 +89,15 @@ def get_message(
         language = get_default_language()
 
     translations = MESSAGES.get(key, {})
-    return str(translations.get(language) or translations[get_default_language()])
+
+    value = translations.get(language)
+    if value:
+        return str(value)
+
+    default = get_default_language()
+    if default != language:
+        fallback = translations.get(default)
+        if fallback:
+            return str(fallback)
+
+    return key

@@ -555,44 +555,33 @@ class NatiqProvider:
         if current_uuid is None:
             return await self.random_ayah()
 
-        current_ayah = next(
-            (ayah for ayah in self._cache.ayahs if ayah.get("uuid") == current_uuid),
-            None,
-        )
-
+        current_ayah = self._cache.ayah_map.get(current_uuid)
         if current_ayah is None:
             return await self.random_ayah()
 
-        metadata = self._get_ayah_metadata(current_ayah)
-        current_surah = metadata.get("surah", 0)
-        current_number = metadata.get("ayah", current_ayah.get("number", 0))
+        # Fast path: O(1) lookup using the prebuilt surah -> {ayah -> uuid} index.
+        location = self._cache.uuid_surah_ayah.get(current_uuid)
+        if location is not None:
+            surah, number = location
+            delta = 1 if direction == "next" else -1
+            target_uuid = self._cache.surah_ayahs.get(surah, {}).get(number + delta)
+            if target_uuid is not None:
+                target = self._cache.ayah_map.get(target_uuid)
+                if target is not None:
+                    return self._build_ayah_from_item(target)
 
-        for ayah in self._cache.ayahs:
-            if ayah.get("uuid") == current_uuid:
-                continue
-
-            candidate_metadata = self._get_ayah_metadata(ayah)
-            candidate_surah = candidate_metadata.get("surah", 0)
-            candidate_number = candidate_metadata.get("ayah", ayah.get("number", 0))
-
-            if candidate_surah != current_surah:
-                continue
-
-            if direction == "next":
-                if candidate_number == current_number + 1:
-                    return self._build_ayah_from_item(ayah)
-            else:
-                if candidate_number == current_number - 1:
-                    return self._build_ayah_from_item(ayah)
-
+        # Fallback: sequential navigation through the ordered ayah list (used
+        # when the index is incomplete, e.g. metadata was missing at load).
         current_index = next(
-            index
-            for index, ayah in enumerate(self._cache.ayahs)
-            if ayah.get("uuid") == current_uuid
+            (index for index, ayah in enumerate(self._cache.ayahs)
+             if ayah.get("uuid") == current_uuid),
+            None,
         )
 
-        delta = 1 if direction == "next" else -1
-        next_index = (current_index + delta) % len(self._cache.ayahs)
-        ayah = self._cache.ayahs[next_index]
+        if current_index is not None:
+            delta = 1 if direction == "next" else -1
+            next_index = (current_index + delta) % len(self._cache.ayahs)
+            ayah = self._cache.ayahs[next_index]
+            return self._build_ayah_from_item(ayah)
 
-        return self._build_ayah_from_item(ayah)
+        return await self.random_ayah()
