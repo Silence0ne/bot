@@ -5,6 +5,7 @@ from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import func, select
+from sqlalchemy.orm import load_only
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings, resolve_timezone
@@ -111,7 +112,12 @@ class ChatRepository:
         return chats
 
     async def should_send_daily_ayah(self, telegram_id: int) -> bool:
-        chat = await self.get_by_telegram_id(telegram_id)
+        from app.database.models.chat import Chat
+        async with self._database.session() as session:
+            stmt = select(Chat).where(Chat.chat_id == telegram_id).options(load_only(Chat.daily_ayah, Chat.last_daily_sent_date, Chat.timezone))
+            result = await session.execute(stmt)
+            chat = result.scalar_one_or_none()
+
         if chat is None or not chat.daily_ayah:
             return False
 

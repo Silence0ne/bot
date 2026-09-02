@@ -14,9 +14,6 @@ from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
 
 if TYPE_CHECKING:
-    pass
-
-if TYPE_CHECKING:
     from app.database.models.chat import Chat
 
 logger = logging.getLogger(__name__)
@@ -127,10 +124,14 @@ def _build_admin_dashboard(
         f"⏱ API Timeout: {settings.NATIQ_API_TIMEOUT}s"
     )
 
+    # Helper to get footer
+    def _get_footer() -> str:
+        return f"\n\n📱 {settings.BOT_USERNAME}"
+
     bot_api_info = (
         f"📍 Base URL: {settings.BOT_API}\n"
         f"🌐 Natiq API: {settings.NATIQ_API_URL}\n"
-        f"🗝 Token masked: {settings.BOT_TOKEN[:4]}...{settings.BOT_TOKEN[-4:] if len(settings.BOT_TOKEN) > 8 else '***'}"
+        f"🔑 API Key: {'✅ Provided' if settings.BOT_TOKEN else '❌ Missing'}"
     )
 
     # Helper to get cache icon
@@ -168,7 +169,7 @@ async def _reply_admin_denied(
     message = get_message("admin_access_denied", language).format(user_id=user_id)
 
     await update.message.reply_text(
-        f"{message}\n\n📱 {settings.BOT_USERNAME}",
+        f"{message}{_get_footer()}",
         reply_markup=main_menu_keyboard(language),
     )
 
@@ -212,7 +213,7 @@ async def reload_quran_cache(
 
     settings = get_settings()
     await update.message.reply_text(
-        f"{get_message('admin_cache_reloading', language)}\n\n📱 {settings.BOT_USERNAME}"
+        f"{get_message('admin_cache_reloading', language)}{_get_footer()}"
     )
 
     reloaded = await container.reload_quran_cache()
@@ -223,7 +224,7 @@ async def reload_quran_cache(
     settings = get_settings()
 
     await update.message.reply_text(
-        f"{get_message(result_key, language)}\n\n📱 {settings.BOT_USERNAME}",
+        f"{get_message(result_key, language)}{_get_footer()}",
         reply_markup=main_menu_keyboard(language),
     )
 
@@ -263,7 +264,7 @@ async def admin_settings_entry(
     settings = get_settings()
 
     await update.message.reply_text(
-        f"{_build_admin_dashboard(update, context, language, stats, totals)}\n\n📱 {settings.BOT_USERNAME}",
+        f"{_build_admin_dashboard(update, context, language, stats, totals)}{_get_footer()}",
         reply_markup=main_menu_keyboard(language),
     )
 

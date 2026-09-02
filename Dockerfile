@@ -1,42 +1,35 @@
-FROM python:3.12-slim
-
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PIP_NO_CACHE_DIR=1
+# Stage 1: Builder
+FROM python:3.12-slim AS builder
 
 WORKDIR /app
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        build-essential \
-        libpq-dev \
-        curl \
-        postgresql-client \
-    && rm -rf /var/lib/apt/lists/* \
-    && pip install psycopg2-binary
-
-RUN python -m pip install --upgrade pip setuptools wheel
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml README.md ./
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir .
 
-RUN mkdir -p app alembic
+# Stage 2: Runtime
+FROM python:3.12-slim
 
-COPY app ./app
-COPY alembic ./alembic
-COPY alembic.ini ./
-COPY docker-entrypoint.sh ./
+WORKDIR /app
 
-RUN chmod +x docker-entrypoint.sh
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN pip install .
+# Copy installed packages from builder
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
-RUN useradd \
-    --create-home \
-    --shell /bin/bash \
-    --uid 1000 \
-    appuser \
-    && chown -R appuser:appuser /app
+COPY . .
+
+RUN useradd --create-home --shell /bin/bash --uid 1000 appuser && \
+    chown -R appuser:appuser /app
 
 USER appuser
 
