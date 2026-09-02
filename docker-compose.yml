@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:17
+    image: postgres:17-alpine
     container_name: ${POSTGRES_CONTAINER_NAME:-quran-postgres}
     restart: unless-stopped
     environment:
@@ -38,9 +38,9 @@ services:
       retries: 10
 
   bot:
-    image: ${BOT_IMAGE:-natiqquran/bot:latest}
     build:
       context: .
+    image: ${BOT_IMAGE:-natiqquran/bot:latest}
     container_name: ${BOT_CONTAINER_NAME:-quran-bot}
     restart: unless-stopped
     env_file:
@@ -59,7 +59,6 @@ services:
     security_opt:
       - no-new-privileges:true
     init: true
-    tty: true
     tmpfs:
       - /tmp
 

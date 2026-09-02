@@ -25,7 +25,6 @@ def get_sync_database_url() -> str:
     Alembic migrations run synchronously.
     Convert async application URLs into sync PostgreSQL URLs.
     """
-
     url = settings.DATABASE_URL
     if "asyncpg" in url:
         url = url.replace("+asyncpg", "")
@@ -42,7 +41,6 @@ def render_item(type_, obj, autogen_context):
     """
     Teach Alembic how to render custom SQLAlchemy types.
     """
-
     if type_ == "type":
         if isinstance(obj, UUIDType):
             autogen_context.imports.add("from app.database.types import UUIDType")
@@ -55,7 +53,6 @@ def run_migrations_offline() -> None:
     """
     Run migrations without creating a database connection.
     """
-
     context.configure(
         url=config.get_main_option("sqlalchemy.url"),
         target_metadata=target_metadata,
@@ -77,7 +74,6 @@ def run_migrations_online() -> None:
     """
     Run migrations using a live database connection.
     """
-
     engine = create_engine(
         config.get_main_option("sqlalchemy.url"),
         pool_pre_ping=True,

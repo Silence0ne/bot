@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml README.md ./
+COPY app ./app
+COPY alembic ./alembic
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir .
 
@@ -26,9 +28,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-COPY . .
+# Copy runtime-only files (source, entrypoint, alembic)
+COPY app ./app
+COPY alembic ./alembic
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
+COPY alembic.ini ./alembic.ini
 
-RUN useradd --create-home --shell /bin/bash --uid 1000 appuser && \
+RUN chmod +x docker-entrypoint.sh && \
+    useradd --create-home --shell /bin/bash --uid 1000 appuser && \
     chown -R appuser:appuser /app
 
 USER appuser
