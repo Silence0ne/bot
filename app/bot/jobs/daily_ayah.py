@@ -1,28 +1,67 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import time
+from typing import TYPE_CHECKING
+from zoneinfo import ZoneInfo
 
-from telegram.ext import Application, JobQueue
+from telegram.ext import Application, ContextTypes, JobQueue
+
+from app.api.checker import MessengerFeature
+from app.bot.handlers.random import format_ayah
+from app.core.config import resolve_timezone
+from app.i18n import detect_language
+from app.ui.keyboards.random import random_ayah_keyboard, random_page_keyboard
+
+if TYPE_CHECKING:
+    from app.database.models.chat import Chat
 
 logger = logging.getLogger(__name__)
 
 
-async def send_daily_ayah_job(context) -> None:
-    """
-    Send daily ayah to users at their scheduled time.
+def _resolve_timezone(chat: "Chat") -> ZoneInfo:
+    return resolve_timezone(chat.timezone)
 
-    The job runs in UTC (hardcoded Greenwich) at 00:00 and checks users' local timezones
-    to determine if it's their scheduled time for daily ayah delivery.
 
-    System:
-    1. Hardcoded base: UTC (Greenwich) at 00:00
-    2. Environment config: Default timezone (Asia/Riyadh) and time (03:15)
-    3. User-specific: Users can set their own timezone via bot interaction
+def _parse_daily_time(chat: "Chat") -> time | None:
+    try:
+        hour_str, minute_str = chat.daily_time.split(":", 1)
+        return time(hour=int(hour_str), minute=int(minute_str))
+    except (ValueError, AttributeError):
+        logger.warning(
+            "Invalid daily_time for chat_id=%s: %r",
+            chat.chat_id,
+            chat.daily_time,
+        )
+        return None
+
+
+def _daily_ayah_job_name(chat_id: int) -> str:
+    return f"daily_ayah_{chat_id}"
+
+
+async def send_daily_ayah_job(context: ContextTypes.DEFAULT_TYPE) -> None:
     """
+    Send the daily ayah to the single user this job was scheduled for.
+
+    Each user gets their own deterministic daily job (see ``schedule_user_daily_ayah``),
+    which fires at their exact local time. The ``last_daily_sent_date`` field guards
+    against accidental duplicates.
+    """
+    job = context.job
+    if job is None or not isinstance(job.data, dict):
+        logger.warning("Daily ayah job invoked without chat_id data")
+        return
+
+    chat_id = job.data.get("chat_id")
+    if chat_id is None:
+        logger.warning("Daily ayah job missing chat_id")
+        return
+
     try:
         from app.core.container import Container
         from app.database.repositories.chat import ChatRepository
+        from app.bot.handlers.random_page import format_page, generate_random_page
 
         container: Container = context.application.bot_data.get("container")
         chat_repo: ChatRepository = context.application.bot_data.get("user_repository")
@@ -31,93 +70,172 @@ async def send_daily_ayah_job(context) -> None:
             logger.warning("Container or chat repository not available")
             return
 
-        # Run in UTC (hardcoded Greenwich)
-        now = datetime.now(timezone.utc)
-        hour = now.hour
-        minute = now.minute
+        user = await chat_repo.get_by_telegram_id(chat_id)
 
-        logger.debug(
-            "Running daily ayah job (UTC): %02d:%02d",
-            hour,
-            minute,
-        )
-
-        # Get all users who should receive ayah at this time (based on their timezone)
-        users = await chat_repo.list_due_for_daily_ayah()
-
-        if not users:
-            logger.debug("No users scheduled for current time")
+        if user is None:
+            logger.info(
+                "User no longer exists, removing daily ayah job: chat_id=%s", chat_id
+            )
+            remove_daily_ayah_job(context.application, chat_id)
             return
 
-        logger.info("Sending daily ayah to %d users", len(users))
+        # Check if user has daily ayah enabled
+        if not user.daily_ayah:
+            logger.debug(
+                "Daily ayah disabled for user: telegram_id=%s",
+                user.chat_id,
+            )
+            return
 
-        for user in users:
-            try:
-                # Check if already sent today
-                should_send = await chat_repo.should_send_daily_ayah(user.chat_id)
+        # Check if already sent today
+        if not await chat_repo.should_send_daily_ayah(user.chat_id):
+            logger.debug(
+                "Already sent today: telegram_id=%s",
+                user.chat_id,
+            )
+            return
 
-                if not should_send:
-                    logger.debug(
-                        "Already sent today: telegram_id=%s",
-                        user.chat_id,
-                    )
-                    continue
+        log_surah: int = -1
+        log_ayah: int = -1
 
-                # Get random ayah
-                ayah = await container.provider.random_ayah()
+        # Determine if sending an ayah or a page
+        reply_markup = None
 
-                # Format message
-                message = (
-                    f"🌙 آیه روز (Daily Ayah)\n\n"
-                    f"﴿ {ayah.text} ﴾\n\n"
-                    f"📖 {ayah.surah_name}\n"
-                    f"آیه {ayah.ayah_number} | سوره {ayah.surah_number}"
+        if user.daily_type == "page":
+            # Get random page
+            content = await generate_random_page(container)
+            # format_page already appends the bot attribution line
+            message = format_page(content)
+
+            # Attach the same inline keyboard as the random page
+            # (Next Page / Translation toggle).
+            if content and context.application.bot_data["feature_checker"].supports(
+                MessengerFeature.INLINE_KEYBOARD
+            ):
+                language = detect_language(user.language)
+                reply_markup = random_page_keyboard(
+                    content[0].uuid,
+                    language,
+                    False,
                 )
+        else:
+            # Get random ayah
+            ayah = await container.provider.random_ayah()
+            log_surah = ayah.surah_number
+            log_ayah = ayah.ayah_number
+            language = detect_language(user.language)
+            # format_ayah already appends the bot attribution line
+            message = format_ayah(ayah)
 
-                if ayah.translation:
-                    message += f"\n\n📝 ترجمه:\n{ayah.translation}"
+            # Attach the same inline keyboard as the random ayah
+            # (Next Ayah).
+            if context.application.bot_data["feature_checker"].supports(
+                MessengerFeature.INLINE_KEYBOARD
+            ):
+                reply_markup = random_ayah_keyboard(ayah.uuid, language)
 
-                # Send to user
-                await context.bot.send_message(
-                    chat_id=user.chat_id,
-                    text=message,
-                )
+        # Send to user
+        await context.bot.send_message(
+            chat_id=user.chat_id,
+            text=message,
+            reply_markup=reply_markup,
+        )
 
-                # Mark as sent
-                await chat_repo.mark_daily_ayah_sent(user.chat_id)
+        # Mark as sent
+        await chat_repo.mark_daily_ayah_sent(user.chat_id)
 
-                logger.info(
-                    "Sent daily ayah: telegram_id=%s, surah=%d, ayah=%d",
-                    user.chat_id,
-                    ayah.surah_number,
-                    ayah.ayah_number,
-                )
-
-            except Exception as exc:
-                logger.exception(
-                    "Failed to send daily ayah: telegram_id=%s, error=%s",
-                    user.chat_id,
-                    exc,
-                )
-                continue
+        logger.info(
+            "Sent daily ayah: telegram_id=%s, type=%s, surah=%d, ayah=%d",
+            user.chat_id,
+            user.daily_type,
+            log_surah,
+            log_ayah,
+        )
 
     except Exception as exc:
-        logger.exception("Daily ayah job failed: error=%s", exc)
+        logger.exception(
+            "Failed to send daily ayah: telegram_id=%s, error=%s",
+            chat_id,
+            exc,
+        )
 
 
-def schedule_daily_ayah(application: Application) -> None:
+def remove_daily_ayah_job(application: Application, chat_id: int) -> None:
+    """Cancel any scheduled daily ayah job for the given chat."""
+    job_queue: JobQueue | None = application.job_queue
+    if job_queue is None:
+        return
+
+    name = _daily_ayah_job_name(chat_id)
+    for job in job_queue.get_jobs_by_name(name):
+        job.schedule_removal()
+
+
+def schedule_user_daily_ayah(
+    application: Application,
+    chat: "Chat",
+    *,
+    replace_existing: bool = True,
+) -> None:
     """
-    Schedule daily ayah job.
+    Schedule a deterministic daily ayah job for a single user.
 
-    Runs every minute to check if it's time to send ayah to users.
+    The job runs at the user's local time (``chat.daily_time`` in ``chat.timezone``)
+    and repeats every day. Any previously scheduled job for the same chat is replaced
+    unless ``replace_existing`` is False (used at startup, when no jobs exist yet,
+    to avoid an O(n^2) scan of the job queue).
     """
-    job_queue: JobQueue = application.job_queue
+    job_queue: JobQueue | None = application.job_queue
+    if job_queue is None:
+        return
 
-    job_queue.run_repeating(
+    if replace_existing:
+        remove_daily_ayah_job(application, chat.chat_id)
+
+    if not chat.daily_ayah:
+        logger.info("Daily ayah disabled, removing job: chat_id=%s", chat.chat_id)
+        return
+
+    tz = _resolve_timezone(chat)
+    due_time = _parse_daily_time(chat)
+    if due_time is None:
+        return
+
+    due_time = due_time.replace(tzinfo=tz)
+
+    job_queue.run_daily(
         send_daily_ayah_job,
-        interval=60,  # Check every minute
-        first=0,  # Start immediately
-        name="daily_ayah",
+        time=due_time,
+        days=tuple(range(7)),  # Every day
+        name=_daily_ayah_job_name(chat.chat_id),
+        data={"chat_id": chat.chat_id},
     )
 
-    logger.info("Daily ayah job scheduled (runs every minute)")
+    logger.info(
+        "Scheduled daily ayah: chat_id=%s, time=%s, tz=%s",
+        chat.chat_id,
+        due_time.strftime("%H:%M"),
+        tz.key,
+    )
+
+
+async def schedule_daily_ayah(application: Application) -> None:
+    """
+    Schedule deterministic daily ayah jobs for all users with daily ayah enabled.
+
+    Called once at startup. Individual users are (re)scheduled as their preferences
+    change via ``schedule_user_daily_ayah``.
+    """
+    container = application.bot_data.get("container")
+    chat_repo = application.bot_data.get("user_repository")
+
+    if not container or not chat_repo:
+        logger.warning("Container or chat repository not available")
+        return
+
+    chats = await chat_repo.list_daily_ayah_enabled()
+
+    for chat in chats:
+        schedule_user_daily_ayah(application, chat, replace_existing=False)
+
+    logger.info("Scheduled daily ayah for %d users", len(chats))

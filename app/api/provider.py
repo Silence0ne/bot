@@ -129,48 +129,49 @@ class NatiqProvider:
         if not uuids:
             return []
 
-        # Choose strategy: use first UUID only (matches your earlier behavior).
-        # If you want to load all UUIDs, tell me and I'll adjust.
-        takhtit_uuid = uuids[0]
-        logger.info("Using takhtit_uuid=%s", takhtit_uuid)
-
+        # Takhtits may cover only part of the Quran each, so all of them must
+        # be merged to build complete page/juz metadata for every ayah.
         results: list[dict[str, Any]] = []
         seen: set[str] = set()
 
-        offset = 0
-        limit = 200
+        for takhtit_uuid in uuids:
+            offset = 0
+            limit = 200
 
-        while True:
-            response = await self._get_with_retry(
-                f"/takhtits/{takhtit_uuid}/ayahs_breakers/",
-                params={"offset": offset, "limit": limit},
-            )
+            while True:
+                response = await self._get_with_retry(
+                    f"/takhtits/{takhtit_uuid}/ayahs_breakers/",
+                    params={"offset": offset, "limit": limit},
+                )
 
-            items = self._extract_list(response.json())
-            if not items:
-                break
+                items = self._extract_list(response.json())
+                if not items:
+                    break
 
-            added = 0
-            for item in items:
-                item_uuid = item.get("uuid")
-                if isinstance(item_uuid, str) and item_uuid:
-                    if item_uuid in seen:
-                        continue
-                    seen.add(item_uuid)
+                added = 0
+                for item in items:
+                    item_uuid = item.get("uuid")
+                    if isinstance(item_uuid, str) and item_uuid:
+                        if item_uuid in seen:
+                            continue
+                        seen.add(item_uuid)
 
-                results.append(item)
-                added += 1
+                    results.append(item)
+                    added += 1
 
-            logger.info("Loaded %s takhtits", len(results))
+                logger.info("Loaded %s takhtits", len(results))
 
-            if added == 0:
-                logger.warning("Repeated takhtit page detected")
-                break
+                if added == 0:
+                    logger.warning(
+                        "Repeated takhtit page detected for uuid=%s",
+                        takhtit_uuid,
+                    )
+                    break
 
-            if len(items) < limit:
-                break
+                if len(items) < limit:
+                    break
 
-            offset += len(items)
+                offset += len(items)
 
         logger.info("Finished loading %s takhtits", len(results))
         return results
@@ -263,10 +264,46 @@ class NatiqProvider:
     def _get_ayah_metadata(self, ayah: dict[str, Any]) -> dict[str, Any]:
         ayah_uuid = ayah.get("uuid")
 
-        if not ayah_uuid:
-            return {}
+        if ayah_uuid:
+            metadata = self._cache.takhtit_map.get(ayah_uuid)
+            if metadata:
+                return metadata
 
-        return self._cache.takhtit_map.get(ayah_uuid, {})
+        # Fall back to the position data embedded in the ayah itself
+        # (breakers + surah object) so page lookups never go empty.
+        return self._extract_ayah_breakers(ayah)
+
+    @staticmethod
+    def _extract_ayah_breakers(ayah: dict[str, Any]) -> dict[str, Any]:
+        metadata: dict[str, Any] = {}
+
+        number = ayah.get("number")
+        if number is not None:
+            metadata["ayah"] = number
+
+        surah = ayah.get("surah")
+        if isinstance(surah, dict):
+            if surah.get("uuid"):
+                metadata["surah_uuid"] = surah["uuid"]
+            if surah.get("number") is not None:
+                metadata["surah"] = surah["number"]
+
+        breakers = ayah.get("breakers")
+        if isinstance(breakers, list):
+            for breaker in breakers:
+                if not isinstance(breaker, dict):
+                    continue
+
+                name = breaker.get("name")
+                value = breaker.get("number")
+
+                if (
+                    name in {"page", "juz", "hizb", "ruku", "manzil"}
+                    and value is not None
+                ):
+                    metadata[name] = int(value)
+
+        return metadata
 
     def _resolve_surah(self, metadata: dict[str, Any]) -> dict[str, Any]:
         surah_uuid = metadata.get("surah_uuid")
@@ -447,6 +484,65 @@ class NatiqProvider:
             direction="next",
         )
 
+    async def random_page(self) -> list[Ayah]:
+        """Return all ayahs from a random Quran page."""
+        if not self._cache.ayahs:
+            raise RuntimeError("Quran cache empty")
+
+        page_numbers = list(self._cache.page_ayahs)
+
+        if not page_numbers:
+            return []
+
+        page_number = random.choice(page_numbers)
+        return await self.get_ayahs_by_page(page_number)
+
+    async def get_ayahs_by_page(self, page_number: int) -> list[Ayah]:
+        """Get all ayahs for a specific page number."""
+        if not self._cache.ayahs:
+            raise RuntimeError("Quran cache empty")
+
+        uuids = self._cache.page_ayahs.get(page_number)
+        if not uuids:
+            # Fall back to a scan in case the page index hasn't been built yet
+            # (e.g. cache is still loading).
+            return [
+                self._build_ayah_from_item(ayah)
+                for ayah in self._cache.ayahs
+                if self._get_ayah_metadata(ayah).get("page") == page_number
+            ]
+
+        ayah_map = self._cache.ayah_map
+        return [
+            self._build_ayah_from_item(ayah_map[uuid])
+            for uuid in uuids
+            if uuid in ayah_map
+        ]
+
+    async def get_ayahs_by_first_ayah_uuid(self, ayah_uuid: str) -> list[Ayah]:
+        """Get all ayahs for the page identified by the uuid of its first ayah."""
+        if not self._cache.ayahs:
+            raise RuntimeError("Quran cache empty")
+
+        page = self._cache.uuid_page.get(ayah_uuid)
+
+        if page is not None:
+            return await self.get_ayahs_by_page(page)
+
+        # Fall back to a scan if the index is incomplete.
+        for ayah in self._cache.ayahs:
+            if ayah.get("uuid") != ayah_uuid:
+                continue
+
+            page = self._get_ayah_metadata(ayah).get("page")
+
+            if page is not None:
+                return await self.get_ayahs_by_page(page)
+
+            break
+
+        return []
+
     async def _navigate_ayah(
         self,
         current_uuid: str | None = None,
@@ -459,44 +555,36 @@ class NatiqProvider:
         if current_uuid is None:
             return await self.random_ayah()
 
-        current_ayah = next(
-            (ayah for ayah in self._cache.ayahs if ayah.get("uuid") == current_uuid),
-            None,
-        )
-
+        current_ayah = self._cache.ayah_map.get(current_uuid)
         if current_ayah is None:
             return await self.random_ayah()
 
-        metadata = self._get_ayah_metadata(current_ayah)
-        current_surah = metadata.get("surah", 0)
-        current_number = metadata.get("ayah", current_ayah.get("number", 0))
+        # Fast path: O(1) lookup using the prebuilt surah -> {ayah -> uuid} index.
+        location = self._cache.uuid_surah_ayah.get(current_uuid)
+        if location is not None:
+            surah, number = location
+            delta = 1 if direction == "next" else -1
+            target_uuid = self._cache.surah_ayahs.get(surah, {}).get(number + delta)
+            if target_uuid is not None:
+                target = self._cache.ayah_map.get(target_uuid)
+                if target is not None:
+                    return self._build_ayah_from_item(target)
 
-        for ayah in self._cache.ayahs:
-            if ayah.get("uuid") == current_uuid:
-                continue
-
-            candidate_metadata = self._get_ayah_metadata(ayah)
-            candidate_surah = candidate_metadata.get("surah", 0)
-            candidate_number = candidate_metadata.get("ayah", ayah.get("number", 0))
-
-            if candidate_surah != current_surah:
-                continue
-
-            if direction == "next":
-                if candidate_number == current_number + 1:
-                    return self._build_ayah_from_item(ayah)
-            else:
-                if candidate_number == current_number - 1:
-                    return self._build_ayah_from_item(ayah)
-
+        # Fallback: sequential navigation through the ordered ayah list (used
+        # when the index is incomplete, e.g. metadata was missing at load).
         current_index = next(
-            index
-            for index, ayah in enumerate(self._cache.ayahs)
-            if ayah.get("uuid") == current_uuid
+            (
+                index
+                for index, ayah in enumerate(self._cache.ayahs)
+                if ayah.get("uuid") == current_uuid
+            ),
+            None,
         )
 
-        delta = 1 if direction == "next" else -1
-        next_index = (current_index + delta) % len(self._cache.ayahs)
-        ayah = self._cache.ayahs[next_index]
+        if current_index is not None:
+            delta = 1 if direction == "next" else -1
+            next_index = (current_index + delta) % len(self._cache.ayahs)
+            ayah = self._cache.ayahs[next_index]
+            return self._build_ayah_from_item(ayah)
 
-        return self._build_ayah_from_item(ayah)
+        return await self.random_ayah()

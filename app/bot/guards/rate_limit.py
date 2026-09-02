@@ -9,8 +9,10 @@ from inspect import isawaitable
 from typing import Protocol
 
 from telegram import Update
+from telegram.error import BadRequest
 from telegram.ext import ContextTypes
 
+from app.core.config import get_settings
 from app.i18n import detect_language, get_message
 
 
@@ -55,7 +57,17 @@ class InMemoryRateLimiter:
             return False
 
         hits.append(now)
+
+        # Opportunistically prune stale keys so the fallback limiter doesn't
+        # grow unboundedly with the number of distinct chats/endpoints.
+        if len(self._hits) > self._MAX_KEYS:
+            expired = [k for k, d in self._hits.items() if not d]
+            for k in expired:
+                self._hits.pop(k, None)
+
         return True
+
+    _MAX_KEYS = 10_000
 
 
 class RedisRateLimiter:
@@ -106,21 +118,31 @@ async def _reply_rate_limited(
     context: ContextTypes.DEFAULT_TYPE,
     message: str,
 ) -> None:
+    settings = get_settings()
+    message_with_username = f"{message}\n\n📱 {settings.BOT_USERNAME}"
+
     if update.callback_query is not None:
-        await update.callback_query.answer(
-            message,
-            show_alert=False,
-        )
+        try:
+            await update.callback_query.answer(
+                message_with_username,
+                show_alert=False,
+            )
+        except BadRequest:
+            # Query already answered or expired; fall back to editing the message.
+            try:
+                await update.callback_query.edit_message_text(message_with_username)
+            except BadRequest:
+                pass
         return
 
     if update.message is not None:
-        await update.message.reply_text(message)
+        await update.message.reply_text(message_with_username)
         return
 
     if update.effective_chat is not None:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=message,
+            text=message_with_username,
         )
 
 

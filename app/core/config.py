@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from zoneinfo import ZoneInfo
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -27,11 +28,10 @@ class Settings(BaseSettings):
 
     # Bot
     BOT_TOKEN: str = ""
-    BOT_USERNAME: str = "@NatiqBot"
+    BOT_USERNAME: str = "@NatiqChatBot"
     BOT_API: str = "https://api.telegram.org"
     PLATFORM: str = "TELEGRAM"
     BOT_LANGUAGE: str = "fa"
-    OPEN_IN_NATIQ_BASE_URL: str = "https://api.natiq.net/"
     ADMIN_USER_IDS: str = ""  # Comma-separated list
 
     # Database
@@ -51,6 +51,7 @@ class Settings(BaseSettings):
     # Natiq API
     NATIQ_API_URL: str = "https://api.natiq.net/"
     NATIQ_PRIMARY_API: str = "https://api.natiq.net/"
+    NATIQ_SECONDARY_API: str | None = None
     NATIQ_API_TOKEN: str | None = None
     NATIQ_API_TIMEOUT: int = 120
 
@@ -150,6 +151,18 @@ def get_settings() -> Settings:
         Settings object
     """
     return Settings()
+
+
+def resolve_timezone(timezone_name: str | None) -> ZoneInfo:
+    """
+    Resolve a timezone name to a ZoneInfo, falling back to the configured
+    default timezone and finally UTC when the name is missing or invalid.
+    """
+    settings = get_settings()
+    try:
+        return ZoneInfo(timezone_name or settings.DAILY_AYAH_DEFAULT_TIMEZONE)
+    except Exception:
+        return ZoneInfo("UTC")
 
 
 def validate_runtime_settings() -> Settings:

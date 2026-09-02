@@ -6,16 +6,12 @@ from typing import TYPE_CHECKING, Protocol
 
 import psutil
 from telegram import Update
-from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, ContextTypes
 
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
 from app.core.config import get_settings
 from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
-
-if TYPE_CHECKING:
-    pass
 
 if TYPE_CHECKING:
     from app.database.models.chat import Chat
@@ -131,7 +127,7 @@ def _build_admin_dashboard(
     bot_api_info = (
         f"📍 Base URL: {settings.BOT_API}\n"
         f"🌐 Natiq API: {settings.NATIQ_API_URL}\n"
-        f"🗝 Token masked: {settings.BOT_TOKEN[:4]}...{settings.BOT_TOKEN[-4:] if len(settings.BOT_TOKEN) > 8 else '***'}"
+        f"🔑 API Key: {'✅ Provided' if settings.BOT_TOKEN else '❌ Missing'}"
     )
 
     # Helper to get cache icon
@@ -153,6 +149,10 @@ def _build_admin_dashboard(
     )
 
 
+def _get_footer(username: str) -> str:
+    return f"\n\n📱 {username}"
+
+
 async def _reply_admin_denied(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
@@ -166,9 +166,10 @@ async def _reply_admin_denied(
 
     user_id = update.effective_user.id if update.effective_user else "unknown"
     message = get_message("admin_access_denied", language).format(user_id=user_id)
+    settings = get_settings()
 
     await update.message.reply_text(
-        message,
+        f"{message}{_get_footer(settings.BOT_USERNAME)}",
         reply_markup=main_menu_keyboard(language),
     )
 
@@ -203,22 +204,27 @@ async def reload_quran_cache(
 
     container = context.application.bot_data.get("container")
     if not container:
+        settings = get_settings()
         await update.message.reply_text(
-            "Service temporarily unavailable. Please try again.",
+            f"Service temporarily unavailable. Please try again.\n\n📱 {settings.BOT_USERNAME}",
             reply_markup=main_menu_keyboard(language),
         )
         return
 
-    await update.message.reply_text(get_message("admin_cache_reloading", language))
+    settings = get_settings()
+    await update.message.reply_text(
+        f"{get_message('admin_cache_reloading', language)}{_get_footer(settings.BOT_USERNAME)}"
+    )
 
     reloaded = await container.reload_quran_cache()
 
     result_key = (
         "admin_cache_reload_success" if reloaded else "admin_cache_reload_failed"
     )
+    settings = get_settings()
 
     await update.message.reply_text(
-        get_message(result_key, language),
+        f"{get_message(result_key, language)}{_get_footer(settings.BOT_USERNAME)}",
         reply_markup=main_menu_keyboard(language),
     )
 
@@ -246,18 +252,19 @@ async def admin_settings_entry(
 
     container = context.application.bot_data.get("container")
     if not container:
+        settings = get_settings()
         await update.message.reply_text(
-            "Service temporarily unavailable. Please try again.",
+            f"Service temporarily unavailable. Please try again.\n\n📱 {settings.BOT_USERNAME}",
             reply_markup=main_menu_keyboard(language),
         )
         return
 
     stats = await _get_system_stats(context)
     totals = await container.chat_repository.get_send_totals()
+    settings = get_settings()
 
     await update.message.reply_text(
-        _build_admin_dashboard(update, context, language, stats, totals),
-        parse_mode=ParseMode.MARKDOWN,
+        f"{_build_admin_dashboard(update, context, language, stats, totals)}{_get_footer(settings.BOT_USERNAME)}",
         reply_markup=main_menu_keyboard(language),
     )
 

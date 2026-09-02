@@ -66,6 +66,61 @@ def test_next_ayah_returns_following_ayah_from_same_surah() -> None:
     assert ayah.surah_icon == "🕌"
 
 
+def test_get_ayahs_by_first_ayah_uuid_returns_same_page() -> None:
+    provider = make_provider(
+        ayahs=[
+            {"uuid": "1", "text": "first", "number": 1},
+            {"uuid": "2", "text": "second", "number": 2},
+            {"uuid": "3", "text": "third", "number": 3},
+        ],
+        takhtits=[
+            {"uuid": "1", "surah": 4, "ayah": 14, "surah_uuid": "surah-4", "page": 77},
+            {"uuid": "2", "surah": 4, "ayah": 15, "surah_uuid": "surah-4", "page": 77},
+            {"uuid": "3", "surah": 5, "ayah": 1, "surah_uuid": "surah-5", "page": 78},
+        ],
+        surahs=[
+            {
+                "uuid": "surah-4",
+                "number": 4,
+                "name": "النساء",
+                "location": "madani",
+            },
+            {
+                "uuid": "surah-5",
+                "number": 5,
+                "name": "المائدة",
+                "location": "madani",
+            },
+        ],
+    )
+
+    page_ayahs = asyncio.run(provider.get_ayahs_by_first_ayah_uuid("1"))
+
+    assert [ayah.uuid for ayah in page_ayahs] == ["1", "2"]
+    assert all(ayah.page == 77 for ayah in page_ayahs)
+
+
+def test_get_ayahs_by_first_ayah_uuid_returns_empty_for_unknown_uuid() -> None:
+    provider = make_provider(
+        ayahs=[{"uuid": "1", "text": "first", "number": 1}],
+        takhtits=[
+            {"uuid": "1", "surah": 4, "ayah": 14, "surah_uuid": "surah-4", "page": 77}
+        ],
+        surahs=[
+            {
+                "uuid": "surah-4",
+                "number": 4,
+                "name": "النساء",
+                "location": "madani",
+            },
+        ],
+    )
+
+    page_ayahs = asyncio.run(provider.get_ayahs_by_first_ayah_uuid("missing"))
+
+    assert page_ayahs == []
+
+
 def test_provider_strips_bismillah_when_it_is_the_first_ayah() -> None:
     bismillah_text = "fixture bismillah"
     remaining_text = "fixture first ayah body"

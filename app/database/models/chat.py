@@ -34,7 +34,9 @@ class Chat(Base, UUIDMixin, TimestampMixin):
         String(5), default="03:15"
     )  # User's local time
     timezone: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    daily_type: Mapped[str] = mapped_column(String(10), default="ayah")  # "ayah" or "page"
+    daily_type: Mapped[str] = mapped_column(
+        String(10), default="ayah"
+    )  # "ayah" or "page"
 
     # Admin status
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -49,13 +51,3 @@ class Chat(Base, UUIDMixin, TimestampMixin):
         uselist=False,
         cascade="all, delete-orphan",
     )
-
-    @property
-    def daily_ayah_hour(self) -> int:
-        hour, _minute = self.daily_time.split(":", 1)
-        return int(hour)
-
-    @property
-    def daily_ayah_minute(self) -> int:
-        _hour, minute = self.daily_time.split(":", 1)
-        return int(minute)

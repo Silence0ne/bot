@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
 
 from telegram import Update
-from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, ContextTypes
 
 from app.api.checker import MessengerFeature
@@ -13,9 +11,6 @@ from app.core.config import get_settings
 from app.i18n import detect_language, get_message
 from app.schemas.ayah import Ayah
 from app.ui.keyboards import random_ayah_keyboard
-
-if TYPE_CHECKING:
-    pass
 
 logger = logging.getLogger(__name__)
 
@@ -27,23 +22,23 @@ def format_ayah(ayah: Ayah) -> str:
 
     # Surah header: makki/madani icon + surah name (no trailing space if no icon)
     if ayah.surah_icon:
-        parts.append(f"{ayah.surah_icon} *{ayah.surah_name}*")
+        parts.append(f"{ayah.surah_icon} {ayah.surah_name}")
     else:
-        parts.append(f"*{ayah.surah_name}*")
+        parts.append(ayah.surah_name)
 
     # Bismillah (shown before the ayah text when applicable)
     if ayah.show_bismillah_line and ayah.bismillah_text:
         parts.append(ayah.bismillah_text)
 
     # Ayah text
-    parts.append(f"📖 *{ayah.text} ﴿{ayah.ayah_number}﴾*")
+    parts.append(f"📖 {ayah.text} ﴿{ayah.ayah_number}﴾")
 
     # Translation (if available)
     if ayah.translation:
         parts.append(f"📝 {ayah.translation} ({ayah.ayah_number})")
 
     # Attribution
-    parts.append(settings.BOT_USERNAME)
+    parts.append(f"📱 {settings.BOT_USERNAME}")
 
     return "\n\n".join(parts)
 
@@ -62,16 +57,26 @@ async def random_ayah(
     if not update.message:
         return
 
+    language = detect_language(
+        update.effective_user.language_code if update.effective_user else None
+    )
+
     try:
         container = context.application.bot_data.get("container")
 
         if not container:
             logger.warning("Container not available")
-            await update.message.reply_text(get_message("random_ayah_error"))
+            settings = get_settings()
+            await update.message.reply_text(
+                f"{get_message('random_ayah_error', language)}\n\n📱 {settings.BOT_USERNAME}"
+            )
             return
 
         if not container.quran_cache_ready:
-            await update.message.reply_text(get_message("random_ayah_error"))
+            settings = get_settings()
+            await update.message.reply_text(
+                f"{get_message('random_ayah_error', language)}\n\n📱 {settings.BOT_USERNAME}"
+            )
             return
 
         ayah: Ayah = await container.provider.random_ayah()
@@ -88,11 +93,6 @@ async def random_ayah(
                     reading_mode="ayah",
                 )
 
-        # Pass the correct language
-        language = detect_language(
-            update.effective_user.language_code if update.effective_user else None
-        )
-
         reply_markup = None
         if context.application.bot_data["feature_checker"].supports(
             MessengerFeature.INLINE_KEYBOARD
@@ -101,13 +101,15 @@ async def random_ayah(
 
         await update.message.reply_text(
             text=format_ayah(ayah),
-            parse_mode=ParseMode.MARKDOWN,
             reply_markup=reply_markup,
         )
 
     except Exception as exc:
         logger.exception("Random ayah failed: %s", exc)
-        await update.message.reply_text(get_message("random_ayah_error"))
+        settings = get_settings()
+        await update.message.reply_text(
+            f"{get_message('random_ayah_error', language)}\n\n📱 {settings.BOT_USERNAME}"
+        )
 
 
 def get_handler() -> CommandHandler:

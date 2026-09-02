@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 
 from telegram import Update
-from telegram.constants import ParseMode
 from telegram.ext import CommandHandler, ContextTypes
 from zoneinfo import ZoneInfo
 
@@ -13,19 +12,6 @@ from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
 
 logger = logging.getLogger(__name__)
-
-# Common timezone options for users
-COMMON_TIMEZONES = [
-    "Asia/Dubai",
-    "Asia/Riyadh",
-    "Asia/Tehran",
-    "Europe/London",
-    "America/New_York",
-    "America/Los_Angeles",
-    "Asia/Kolkata",
-    "Asia/Tokyo",
-    "Australia/Sydney",
-]
 
 
 @rate_limit(
@@ -58,8 +44,9 @@ async def timezone_settings(
 
         if not chat_repo:
             logger.warning("Chat repository not available")
+            settings = get_settings()
             await update.message.reply_text(
-                "Service temporarily unavailable. Please try again.",
+                f"Service temporarily unavailable. Please try again.\n\n📱 {settings.BOT_USERNAME}",
                 reply_markup=main_menu_keyboard(language),
             )
             return
@@ -68,10 +55,9 @@ async def timezone_settings(
         chat = await chat_repo.get_by_telegram_id(telegram_id)
 
         if not chat:
+            settings = get_settings()
             await update.message.reply_text(
-                get_message(
-                    "start", language
-                ),  # Use the start message to encourage them to start
+                f"{get_message('start', language)}\n\n📱 {settings.BOT_USERNAME}",  # Use the start message to encourage them to start
                 reply_markup=main_menu_keyboard(language),
             )
             return
@@ -101,12 +87,10 @@ async def timezone_settings(
                 scheduled_time = (
                     chat.daily_time or get_settings().DAILY_AYAH_DEFAULT_TIME
                 )
+                settings = get_settings()
 
                 await update.message.reply_text(
-                    get_message("timezone_set_success", language).format(
-                        timezone=text, time=scheduled_time
-                    ),
-                    parse_mode=ParseMode.MARKDOWN,
+                    f"{get_message('timezone_set_success', language).format(timezone=text, time=scheduled_time)}\n\n📱 {settings.BOT_USERNAME}",
                     reply_markup=main_menu_keyboard(language),
                 )
                 logger.info(
@@ -123,8 +107,9 @@ async def timezone_settings(
                     text,
                     e,
                 )
+                settings = get_settings()
                 await update.message.reply_text(
-                    get_message("timezone_set_error", language),
+                    f"{get_message('timezone_set_error', language)}\n\n📱 {settings.BOT_USERNAME}",
                     reply_markup=main_menu_keyboard(language),
                 )
                 return
@@ -132,22 +117,27 @@ async def timezone_settings(
         # Show current timezone and options
         current_tz = chat.timezone or get_settings().DAILY_AYAH_DEFAULT_TIMEZONE
         current_time_str = chat.daily_time or get_settings().DAILY_AYAH_DEFAULT_TIME
+        settings = get_settings()
 
         message = get_message("timezone_current", language).format(
-            timezone=current_tz, time=current_time_str
+            timezone=current_tz,
+            time=current_time_str,
         )
 
         message += f"\n\n{get_message('timezone_prompt', language)}"
+        message += f"\n\n📱 {settings.BOT_USERNAME}"
 
         await update.message.reply_text(
             message,
-            parse_mode=ParseMode.MARKDOWN,
             reply_markup=main_menu_keyboard(language),
         )
 
     except Exception as exc:
         logger.exception("Timezone handler failed: error=%s", exc)
-        await update.message.reply_text("❌ An error occurred. Please try again.")
+        settings = get_settings()
+        await update.message.reply_text(
+            f"❌ An error occurred. Please try again.\n\n📱 {settings.BOT_USERNAME}"
+        )
 
 
 def get_handler() -> CommandHandler:

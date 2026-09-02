@@ -6,6 +6,8 @@ from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes
 
 from app.bot.guards.rate_limit import RateLimitRule, rate_limit
+from app.bot.jobs.daily_ayah import schedule_user_daily_ayah
+from app.core.config import get_settings
 from app.i18n import detect_language, get_message
 from app.ui.keyboards import main_menu_keyboard
 
@@ -43,10 +45,15 @@ async def start(
         if user_repo:
             # Get or create user in database
             # The repository will set default timezone (Asia/Riyadh) and time (03:15) from env config
-            await user_repo.get_or_create(
+            # Enable daily ayah by default
+            chat = await user_repo.get_or_create(
                 telegram_id=telegram_id,
                 language=language,
+                enable_daily_ayah=True,
             )
+
+            if chat is not None:
+                schedule_user_daily_ayah(context.application, chat)
 
             logger.info("User started: telegram_id=%s", telegram_id)
         else:
@@ -54,14 +61,18 @@ async def start(
             # Continue anyway - the bot should still respond even if database is unavailable
 
         # (Cleanup: remove unused admin check from /start)
+        settings = get_settings()
         await update.message.reply_text(
-            get_message("start", language),
+            f"{get_message('start', language)}\n\n📱 {settings.BOT_USERNAME}",
             reply_markup=main_menu_keyboard(language),
         )
 
     except Exception as exc:
         logger.exception("Start handler failed: error=%s", exc)
-        await update.message.reply_text("❌ An error occurred. Please try again.")
+        settings = get_settings()
+        await update.message.reply_text(
+            f"❌ An error occurred. Please try again.\n\n📱 {settings.BOT_USERNAME}"
+        )
 
 
 def get_handler() -> CommandHandler:
