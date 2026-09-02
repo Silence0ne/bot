@@ -113,8 +113,15 @@ class ChatRepository:
 
     async def should_send_daily_ayah(self, telegram_id: int) -> bool:
         from app.database.models.chat import Chat
+
         async with self._database.session() as session:
-            stmt = select(Chat).where(Chat.chat_id == telegram_id).options(load_only(Chat.daily_ayah, Chat.last_daily_sent_date, Chat.timezone))
+            stmt = (
+                select(Chat)
+                .where(Chat.chat_id == telegram_id)
+                .options(
+                    load_only(Chat.daily_ayah, Chat.last_daily_sent_date, Chat.timezone)
+                )
+            )
             result = await session.execute(stmt)
             chat = result.scalar_one_or_none()
 

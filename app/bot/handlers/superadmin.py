@@ -124,10 +124,6 @@ def _build_admin_dashboard(
         f"⏱ API Timeout: {settings.NATIQ_API_TIMEOUT}s"
     )
 
-    # Helper to get footer
-    def _get_footer() -> str:
-        return f"\n\n📱 {settings.BOT_USERNAME}"
-
     bot_api_info = (
         f"📍 Base URL: {settings.BOT_API}\n"
         f"🌐 Natiq API: {settings.NATIQ_API_URL}\n"
@@ -153,6 +149,10 @@ def _build_admin_dashboard(
     )
 
 
+def _get_footer(username: str) -> str:
+    return f"\n\n📱 {username}"
+
+
 async def _reply_admin_denied(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
@@ -165,11 +165,11 @@ async def _reply_admin_denied(
     )
 
     user_id = update.effective_user.id if update.effective_user else "unknown"
-    settings = get_settings()
     message = get_message("admin_access_denied", language).format(user_id=user_id)
+    settings = get_settings()
 
     await update.message.reply_text(
-        f"{message}{_get_footer()}",
+        f"{message}{_get_footer(settings.BOT_USERNAME)}",
         reply_markup=main_menu_keyboard(language),
     )
 
@@ -213,7 +213,7 @@ async def reload_quran_cache(
 
     settings = get_settings()
     await update.message.reply_text(
-        f"{get_message('admin_cache_reloading', language)}{_get_footer()}"
+        f"{get_message('admin_cache_reloading', language)}{_get_footer(settings.BOT_USERNAME)}"
     )
 
     reloaded = await container.reload_quran_cache()
@@ -224,7 +224,7 @@ async def reload_quran_cache(
     settings = get_settings()
 
     await update.message.reply_text(
-        f"{get_message(result_key, language)}{_get_footer()}",
+        f"{get_message(result_key, language)}{_get_footer(settings.BOT_USERNAME)}",
         reply_markup=main_menu_keyboard(language),
     )
 
@@ -264,7 +264,7 @@ async def admin_settings_entry(
     settings = get_settings()
 
     await update.message.reply_text(
-        f"{_build_admin_dashboard(update, context, language, stats, totals)}{_get_footer()}",
+        f"{_build_admin_dashboard(update, context, language, stats, totals)}{_get_footer(settings.BOT_USERNAME)}",
         reply_markup=main_menu_keyboard(language),
     )
 
