@@ -13,19 +13,6 @@ from app.ui.keyboards import main_menu_keyboard
 
 logger = logging.getLogger(__name__)
 
-# Common timezone options for users
-COMMON_TIMEZONES = [
-    "Asia/Dubai",
-    "Asia/Riyadh",
-    "Asia/Tehran",
-    "Europe/London",
-    "America/New_York",
-    "America/Los_Angeles",
-    "Asia/Kolkata",
-    "Asia/Tokyo",
-    "Australia/Sydney",
-]
-
 
 @rate_limit(
     RateLimitRule(

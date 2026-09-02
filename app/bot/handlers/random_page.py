@@ -85,6 +85,10 @@ async def random_page(
     if not update.message:
         return
 
+    language = detect_language(
+        update.effective_user.language_code if update.effective_user else None
+    )
+
     try:
         container = context.application.bot_data.get("container")
 
@@ -92,14 +96,14 @@ async def random_page(
             logger.warning("Container not available")
             settings = get_settings()
             await update.message.reply_text(
-                f"{get_message('random_page_error')}\n\n📱 {settings.BOT_USERNAME}"
+                f"{get_message('random_page_error', language)}\n\n📱 {settings.BOT_USERNAME}"
             )
             return
 
         if not container.quran_cache_ready:
             settings = get_settings()
             await update.message.reply_text(
-                f"{get_message('random_page_loading')}\n\n📱 {settings.BOT_USERNAME}"
+                f"{get_message('random_page_loading', language)}\n\n📱 {settings.BOT_USERNAME}"
             )
             return
 
@@ -126,11 +130,6 @@ async def random_page(
                     reading_mode="page",
                 )
 
-        # Pass the correct language
-        language = detect_language(
-            update.effective_user.language_code if update.effective_user else None
-        )
-
         reply_markup = None
         if (
             context.application.bot_data["feature_checker"].supports(
@@ -152,7 +151,7 @@ async def random_page(
         logger.exception("Random page failed: %s", exc)
         settings = get_settings()
         await update.message.reply_text(
-            f"{get_message('random_page_error')}\n\n📱 {settings.BOT_USERNAME}"
+            f"{get_message('random_page_error', language)}\n\n📱 {settings.BOT_USERNAME}"
         )
 
 

@@ -5,6 +5,7 @@ from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import func, select
+from sqlalchemy.orm import load_only
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings, resolve_timezone
@@ -66,41 +67,6 @@ class ChatRepository:
             logger.info("Created chat record: chat_id=%s", telegram_id)
             return chat
 
-    async def upsert_from_update(
-        self,
-        *,
-        telegram_id: int,
-        chat_type: str,
-        language: str | None = None,
-    ) -> "Chat":
-        from app.database.models.chat import Chat
-
-        settings = get_settings()
-
-        async with self._database.session() as session:
-            chat = await self._get_by_telegram_id(session, telegram_id)
-
-            if chat is None:
-                chat = Chat(
-                    chat_id=telegram_id,
-                    chat_type=chat_type,
-                    language=language or "fa",
-                    daily_ayah=chat_type == ChatType.PRIVATE.value,
-                    daily_time=settings.DAILY_AYAH_DEFAULT_TIME,  # Uses env config (03:15 for Riyadh)
-                    timezone=settings.DAILY_AYAH_DEFAULT_TIMEZONE,  # Uses env config (Asia/Riyadh)
-                    daily_type="ayah",  # Default to ayah type
-                    content_mode=ContentMode.RANDOM_AYAH.value,
-                )
-                session.add(chat)
-            else:
-                chat.chat_type = chat_type
-                if language is not None:
-                    chat.language = language
-
-            await session.commit()
-            await session.refresh(chat)
-            return chat
-
     async def update_preferences(
         self,
         telegram_id: int,
@@ -146,7 +112,19 @@ class ChatRepository:
         return chats
 
     async def should_send_daily_ayah(self, telegram_id: int) -> bool:
-        chat = await self.get_by_telegram_id(telegram_id)
+        from app.database.models.chat import Chat
+
+        async with self._database.session() as session:
+            stmt = (
+                select(Chat)
+                .where(Chat.chat_id == telegram_id)
+                .options(
+                    load_only(Chat.daily_ayah, Chat.last_daily_sent_date, Chat.timezone)
+                )
+            )
+            result = await session.execute(stmt)
+            chat = result.scalar_one_or_none()
+
         if chat is None or not chat.daily_ayah:
             return False
 

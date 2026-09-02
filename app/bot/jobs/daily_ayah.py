@@ -171,18 +171,26 @@ def remove_daily_ayah_job(application: Application, chat_id: int) -> None:
         job.schedule_removal()
 
 
-def schedule_user_daily_ayah(application: Application, chat: "Chat") -> None:
+def schedule_user_daily_ayah(
+    application: Application,
+    chat: "Chat",
+    *,
+    replace_existing: bool = True,
+) -> None:
     """
     Schedule a deterministic daily ayah job for a single user.
 
     The job runs at the user's local time (``chat.daily_time`` in ``chat.timezone``)
-    and repeats every day. Any previously scheduled job for the same chat is replaced.
+    and repeats every day. Any previously scheduled job for the same chat is replaced
+    unless ``replace_existing`` is False (used at startup, when no jobs exist yet,
+    to avoid an O(n^2) scan of the job queue).
     """
     job_queue: JobQueue | None = application.job_queue
     if job_queue is None:
         return
 
-    remove_daily_ayah_job(application, chat.chat_id)
+    if replace_existing:
+        remove_daily_ayah_job(application, chat.chat_id)
 
     if not chat.daily_ayah:
         logger.info("Daily ayah disabled, removing job: chat_id=%s", chat.chat_id)
@@ -228,6 +236,6 @@ async def schedule_daily_ayah(application: Application) -> None:
     chats = await chat_repo.list_daily_ayah_enabled()
 
     for chat in chats:
-        schedule_user_daily_ayah(application, chat)
+        schedule_user_daily_ayah(application, chat, replace_existing=False)
 
     logger.info("Scheduled daily ayah for %d users", len(chats))

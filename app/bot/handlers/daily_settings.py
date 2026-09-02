@@ -76,10 +76,8 @@ TIMEZONE_CONTINENTS = {
     ],
 }
 
+
 # Daily type options
-DAILY_TYPES = ["ayah", "page"]
-
-
 async def _safe_edit_message_text(
     query: CallbackQuery,
     text: str,
@@ -94,6 +92,24 @@ async def _safe_edit_message_text(
         )
     except BadRequest:
         pass
+
+
+def _resolve_telegram_id(update: Update) -> int | None:
+    """
+    Resolve the chat identifier used to look up a user in the database.
+
+    ``/start`` stores the record under ``effective_user.id``. On some Bot API
+    forks (e.g. Bale) the effective user/chats can differ, so we fall back to
+    ``effective_chat.id`` before giving up. This makes the daily-settings panel
+    reliably open instead of falling back to the welcome text.
+    """
+    if update.effective_user and update.effective_user.id is not None:
+        return update.effective_user.id
+
+    if update.effective_chat and update.effective_chat.id is not None:
+        return update.effective_chat.id
+
+    return None
 
 
 async def _render_daily_settings(
@@ -118,7 +134,22 @@ async def _render_daily_settings(
             )
         return
 
-    telegram_id = update.effective_user.id
+    telegram_id = _resolve_telegram_id(update)
+
+    if telegram_id is None:
+        logger.warning("Could not resolve telegram id for daily settings")
+        settings = get_settings()
+        text = f"Service temporarily unavailable. Please try again.\n\n📱 {settings.BOT_USERNAME}"
+        if update.callback_query:
+            await _safe_edit_message_text(
+                update.callback_query, text, reply_markup=main_menu_keyboard(language)
+            )
+        else:
+            await update.message.reply_text(
+                text, reply_markup=main_menu_keyboard(language)
+            )
+        return
+
     chat = await chat_repo.get_by_telegram_id(telegram_id)
 
     if not chat:
@@ -230,11 +261,13 @@ async def daily_settings_callback(
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
     """Handle callback queries from daily settings inline keyboard."""
-    if not update.callback_query or not update.effective_user:
+    query = update.callback_query
+
+    if query is None:
         return
 
     try:
-        await update.callback_query.answer()
+        await query.answer()
     except BadRequest:
         pass
 
@@ -249,25 +282,28 @@ async def daily_settings_callback(
             logger.warning("Chat repository not available")
             settings = get_settings()
             await _safe_edit_message_text(
-                update.callback_query,
+                query,
                 f"Service temporarily unavailable. Please try again.\n\n📱 {settings.BOT_USERNAME}",
                 reply_markup=main_menu_keyboard(language),
             )
             return
 
-        telegram_id = update.effective_user.id
+        telegram_id = _resolve_telegram_id(update)
+        if telegram_id is None:
+            return
+
         chat = await chat_repo.get_by_telegram_id(telegram_id)
 
         if not chat:
             settings = get_settings()
             await _safe_edit_message_text(
-                update.callback_query,
+                query,
                 f"{get_message('start', language)}\n\n📱 {settings.BOT_USERNAME}",
                 reply_markup=main_menu_keyboard(language),
             )
             return
 
-        callback_data = update.callback_query.data
+        callback_data = query.data
 
         # Handle different callback actions
         if callback_data == "daily_tz_continent":
@@ -301,7 +337,7 @@ async def daily_settings_callback(
             # Exit daily settings and show main menu
             settings = get_settings()
             await _safe_edit_message_text(
-                update.callback_query,
+                query,
                 f"{get_message('start', language)}\n\n📱 {settings.BOT_USERNAME}",
                 reply_markup=main_menu_keyboard(language),
             )
@@ -311,7 +347,7 @@ async def daily_settings_callback(
         logger.exception("Daily settings callback failed: error=%s", exc)
         settings = get_settings()
         await _safe_edit_message_text(
-            update.callback_query,
+            query,
             f"❌ An error occurred. Please try again.\n\n📱 {settings.BOT_USERNAME}",
             reply_markup=main_menu_keyboard(language),
         )
@@ -402,9 +438,10 @@ async def set_timezone(
         # Validate timezone
         ZoneInfo(timezone)
 
-        await chat_repo.update_preferences(telegram_id=telegram_id, timezone=timezone)
+        chat = await chat_repo.update_preferences(
+            telegram_id=telegram_id, timezone=timezone
+        )
 
-        chat = await chat_repo.get_by_telegram_id(telegram_id)
         if chat is not None:
             schedule_user_daily_ayah(context.application, chat)
 

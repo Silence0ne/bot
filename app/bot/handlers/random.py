@@ -57,6 +57,10 @@ async def random_ayah(
     if not update.message:
         return
 
+    language = detect_language(
+        update.effective_user.language_code if update.effective_user else None
+    )
+
     try:
         container = context.application.bot_data.get("container")
 
@@ -64,14 +68,14 @@ async def random_ayah(
             logger.warning("Container not available")
             settings = get_settings()
             await update.message.reply_text(
-                f"{get_message('random_ayah_error')}\n\n📱 {settings.BOT_USERNAME}"
+                f"{get_message('random_ayah_error', language)}\n\n📱 {settings.BOT_USERNAME}"
             )
             return
 
         if not container.quran_cache_ready:
             settings = get_settings()
             await update.message.reply_text(
-                f"{get_message('random_ayah_error')}\n\n📱 {settings.BOT_USERNAME}"
+                f"{get_message('random_ayah_error', language)}\n\n📱 {settings.BOT_USERNAME}"
             )
             return
 
@@ -89,11 +93,6 @@ async def random_ayah(
                     reading_mode="ayah",
                 )
 
-        # Pass the correct language
-        language = detect_language(
-            update.effective_user.language_code if update.effective_user else None
-        )
-
         reply_markup = None
         if context.application.bot_data["feature_checker"].supports(
             MessengerFeature.INLINE_KEYBOARD
@@ -109,7 +108,7 @@ async def random_ayah(
         logger.exception("Random ayah failed: %s", exc)
         settings = get_settings()
         await update.message.reply_text(
-            f"{get_message('random_ayah_error')}\n\n📱 {settings.BOT_USERNAME}"
+            f"{get_message('random_ayah_error', language)}\n\n📱 {settings.BOT_USERNAME}"
         )
 
 

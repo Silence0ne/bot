@@ -150,7 +150,9 @@ class APIFeatureChecker:
             else:
                 response = await client.get(url, params=spec.payload)
         except httpx.HTTPError as exc:
-            logger.info("Capability probe failed for %s: %s", spec.method, exc)
+            # Mask token in logs by using a redacted URL
+            redacted_url = f"{bot_api}/bot<REDACTED>/{spec.method}"
+            logger.info("Capability probe failed for %s: %s", redacted_url, exc)
             return False
 
         try:
