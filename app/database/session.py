@@ -54,6 +54,7 @@ class Database:
             # If running locally for migration generation, use localhost if "postgres" host fails
             if url.host == "postgres":
                 import os
+
                 if not os.path.exists("/.dockerenv"):
                     database_url = database_url.replace("@postgres:", "@localhost:")
                     logger.info("Running outside Docker, using localhost for DB")
